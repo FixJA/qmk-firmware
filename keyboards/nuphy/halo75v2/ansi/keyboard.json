@@ -94,25 +94,34 @@
       "dual_beacon": true,
       "rainbow_beacon": true,
       "rainbow_pinwheels": true,
+      "flower_blooming": true,
       "raindrops": true,
       "jellybean_raindrops": true,
       "hue_breathing": true,
       "hue_pendulum": true,
       "hue_wave": true,
+      "pixel_rain": true,
+      "pixel_flow": true,
+      "pixel_fractal": true,
       "typing_heatmap": true,
       "digital_rain": true,
       "solid_reactive_simple": true,
       "solid_reactive": true,
       "solid_reactive_wide": true,
-      "solid_reactive_multiwide": true,
       "solid_reactive_cross": true,
-      "solid_reactive_multicross": true,
       "solid_reactive_nexus": true,
-      "solid_reactive_multinexus": true,
       "splash": true,
       "multisplash": true,
       "solid_splash": true,
-      "solid_multisplash": true
+      "solid_multisplash": true,
+      "starlight_smooth": true,
+      "starlight": true,
+      "starlight_dual_sat": true,
+      "starlight_dual_hue": true,
+      "riverflow": true,
+      "solid_reactive_multiwide": true,
+      "solid_reactive_multicross": true,
+      "solid_reactive_multinexus": true
     },
     "layout": [
       {
@@ -1409,7 +1418,7 @@
             3,
             15
           ],
-          "x": 15.00,
+          "x": 15.0,
           "y": 2
         },
         {
@@ -1523,21 +1532,21 @@
           "w": 1.75
         },
         {
-          "label": "↑",
+          "label": "\u2191",
           "matrix": [
             4,
             14
           ],
-          "x": 14.00,
+          "x": 14.0,
           "y": 4
         },
         {
-          "label": "↑",
+          "label": "\u2191",
           "matrix": [
             4,
             15
           ],
-          "x": 15.00,
+          "x": 15.0,
           "y": 4
         },
         {
@@ -1601,7 +1610,7 @@
           "w": 1.25
         },
         {
-          "label": "←",
+          "label": "\u2190",
           "matrix": [
             5,
             13
@@ -1610,7 +1619,7 @@
           "y": 5
         },
         {
-          "label": "↓",
+          "label": "\u2193",
           "matrix": [
             5,
             14
@@ -1619,7 +1628,7 @@
           "y": 5
         },
         {
-          "label": "→",
+          "label": "\u2192",
           "matrix": [
             5,
             15
