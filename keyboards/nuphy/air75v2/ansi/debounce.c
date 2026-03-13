@@ -32,11 +32,11 @@ static bool                cooked_changed;
 static void update_debounce_counters_and_transfer_if_expired(matrix_row_t raw[], matrix_row_t cooked[], uint8_t num_rows, uint8_t elapsed_time);
 static void transfer_matrix_values(matrix_row_t raw[], matrix_row_t cooked[], uint8_t num_rows);
 
-// we use num_rows rather than MATRIX_ROWS to support split keyboards
-void debounce_init(uint8_t num_rows) {
-    debounce_counters = malloc(num_rows * MATRIX_COLS * sizeof(debounce_counter_t));
+// Updated for QMK 0.32.1+ API
+void debounce_init(void) {
+    debounce_counters = malloc(MATRIX_ROWS * MATRIX_COLS * sizeof(debounce_counter_t));
     int i             = 0;
-    for (uint8_t r = 0; r < num_rows; r++) {
+    for (uint8_t r = 0; r < MATRIX_ROWS; r++) {
         for (uint8_t c = 0; c < MATRIX_COLS; c++) {
             debounce_counters[i++].time = DEBOUNCE_ELAPSED;
         }
@@ -48,7 +48,7 @@ void debounce_free(void) {
     debounce_counters = NULL;
 }
 
-bool debounce(matrix_row_t raw[], matrix_row_t cooked[], uint8_t num_rows, bool changed) {
+bool debounce(matrix_row_t raw[], matrix_row_t cooked[], bool changed) {
     bool updated_last = false;
     cooked_changed    = false;
 
@@ -63,7 +63,7 @@ bool debounce(matrix_row_t raw[], matrix_row_t cooked[], uint8_t num_rows, bool 
         }
 
         if (elapsed_time > 0) {
-            update_debounce_counters_and_transfer_if_expired(raw, cooked, num_rows, elapsed_time);
+            update_debounce_counters_and_transfer_if_expired(raw, cooked, MATRIX_ROWS, elapsed_time);
         }
     }
 
@@ -72,7 +72,7 @@ bool debounce(matrix_row_t raw[], matrix_row_t cooked[], uint8_t num_rows, bool 
             last_time = timer_read_fast();
         }
 
-        transfer_matrix_values(raw, cooked, num_rows);
+        transfer_matrix_values(raw, cooked, MATRIX_ROWS);
     }
 
     return cooked_changed;

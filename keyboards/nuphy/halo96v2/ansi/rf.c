@@ -480,9 +480,9 @@ void dev_sts_sync(void) {
     if (f_rf_reset) {
         f_rf_reset = 0;
         wait_ms(100);
-        writePinLow(NRF_RESET_PIN);
+        gpio_write_pin_low(NRF_RESET_PIN);
         wait_ms(50);
-        writePinHigh(NRF_RESET_PIN);
+        gpio_write_pin_high(NRF_RESET_PIN);
         wait_ms(50);
     } else if (f_send_channel) {
         f_send_channel = 0;
@@ -547,11 +547,11 @@ void uart_send_bytes(uint8_t *Buffer, uint32_t Length) {
     if (timer_elapsed32(Usart_Mgr.TXLastCmdTm) < 1) {
         wait_ms(1);
     }
-    writePinLow(NRF_WAKEUP_PIN);
+    gpio_write_pin_low(NRF_WAKEUP_PIN);
     wait_us(50);
     uart_transmit(Buffer, Length);
     wait_us(50 + Length * 30);
-    writePinHigh(NRF_WAKEUP_PIN);
+    gpio_write_pin_high(NRF_WAKEUP_PIN);
     wait_us(200);
     Usart_Mgr.TXLastCmdTm = timer_read32();
 }
