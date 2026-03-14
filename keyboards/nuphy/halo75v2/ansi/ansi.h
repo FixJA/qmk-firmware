@@ -97,6 +97,8 @@ typedef struct {
     uint8_t detect_numlock_state : 1;
     uint8_t battery_indicator_numeric : 1;
     uint8_t show_socd_indicator : 1;
+    uint8_t wpm_display_mode : 2;   // 0-3 (WPM_MODE_PROGRESS, BLINK, HEARTBEAT)
+    uint8_t wpm_color_scheme : 3;   // 0-4 (5 color schemes)
 } kb_config_t;
 
 #ifdef VIA_ENABLE
@@ -120,6 +122,9 @@ enum via_indicator_value {
     id_toggle_detect_numlock_state  = 23,
     id_battery_indicator_numeric    = 24,
     id_toggle_socd_indicator        = 25,
+    // WPM display mode and color scheme
+    id_wpm_display_mode             = 30,
+    id_wpm_color_scheme             = 31,
 };
 
 // function declaration

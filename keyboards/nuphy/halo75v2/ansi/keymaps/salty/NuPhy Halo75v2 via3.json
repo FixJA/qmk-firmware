@@ -268,11 +268,12 @@
                                 10
                             ],
                             "options": [
-                                "Wawe",
+                                "Wave",
                                 "Mix",
                                 "New",
                                 "Breath",
-                                "Static"
+                                "Static",
+                                "WPM"
                             ]
                         },
                         {
@@ -294,8 +295,40 @@
                             ]
                         },
                         {
+                            "label": "WPM Mode",
+                            "showIf": "{id_side_light_mode_a} == 5",
+                            "type": "dropdown",
+                            "content": [
+                                "id_wpm_display_mode",
+                                0,
+                                30
+                            ],
+                            "options": [
+                                "Progress Bar",
+                                "Blink",
+                                "Heartbeat"
+                            ]
+                        },
+                        {
+                            "label": "WPM Color",
+                            "showIf": "{id_side_light_mode_a} == 5",
+                            "type": "dropdown",
+                            "content": [
+                                "id_wpm_color_scheme",
+                                0,
+                                31
+                            ],
+                            "options": [
+                                "Default",
+                                "Mono Green",
+                                "Mono Blue",
+                                "Rainbow",
+                                "Fire"
+                            ]
+                        },
+                        {
                             "label": "Speed (higher is slower)",
-                            "showIf": "{id_side_light_mode_a} != 4",
+                            "showIf": "{id_side_light_mode_a} < 4",
                             "type": "dropdown",
                             "content": [
                                 "id_side_light_speed",
@@ -312,7 +345,7 @@
                         },
                         {
                             "label": "Color",
-                            "showIf": "{id_side_light_mode_a} != 2",
+                            "showIf": "{id_side_light_mode_a} != 2 && {id_side_light_mode_a} != 5",
                             "type": "dropdown",
                             "content": [
                                 "id_side_light_color",

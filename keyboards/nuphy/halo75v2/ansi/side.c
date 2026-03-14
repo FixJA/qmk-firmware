@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define SIDE_NEW 2
 #define SIDE_BREATH 3
 #define SIDE_STATIC 4
+#define SIDE_WPM 5
 
 #define SIDE_MODE_1 0
 #define SIDE_MODE_2 1
@@ -201,7 +202,7 @@ uint8_t side_old_color = 0;
 void    side_mode_a_control(uint8_t dir) {
     if (dir) {
         g_config.side_mode_a++;
-        if (g_config.side_mode_a > SIDE_STATIC) {
+        if (g_config.side_mode_a > SIDE_WPM) {
             g_config.side_mode_a = 0;
         }
     } else {
@@ -705,6 +706,310 @@ static void side_static_mode_show(void) {
     }
 }
 
+// ==================== WPM灯效配置宏 ====================
+
+// 低通滤波参数
+#define WPM_SMOOTH_FACTOR       8   // display_wpm 滤波系数
+#define WPM_PEAK_SMOOTH_FACTOR  16  // peak_wpm 滤波系数
+#define WPM_CUTOFF_THRESHOLD    10  // 截止阈值
+
+// 闪烁模式参数
+#define WPM_BLINK_BASE_INTERVAL   500  // 基础间隔 (ms)
+#define WPM_BLINK_MIN_INTERVAL    50   // 最小间隔 (ms)
+#define WPM_BLINK_WPM_MULTIPLIER  5    // WPM乘数
+#define WPM_BLINK_HIGH_BRIGHTNESS 255  // 高亮度
+#define WPM_BLINK_LOW_BRIGHTNESS  64   // 低亮度
+
+// 心跳模式参数
+#define WPM_HB_SYSTOLE_RISE_MS   50   // 收缩期上升
+#define WPM_HB_SYSTOLE_FALL_MS   100  // 收缩期下降
+#define WPM_HB_DIASTOLE_RISE_MS  30   // 舒张期上升
+#define WPM_HB_DIASTOLE_FALL_MS  70   // 舒张期下降
+#define WPM_HB_DIASTOLE_PEAK     160  // 舒张期峰值
+
+// ==================== WPM灯效统一配置 ====================
+typedef enum { WPM_MODE_PROGRESS = 0, WPM_MODE_BLINK, WPM_MODE_HEARTBEAT, WPM_MODE_COUNT } wpm_display_mode_t;
+
+#define WPM_THRESHOLD 15, 30, 50, 70
+
+#define WPM_TABLE_DEFINE(...) \
+    {.color = {__VA_ARGS__}, .thresholds = {WPM_THRESHOLD}}
+typedef struct {
+    uint8_t color[5];
+    uint8_t thresholds[5];
+} wpm_table_t;
+
+wpm_table_t wpm_tables[] = {
+    WPM_TABLE_DEFINE(192, 128, 96, 64, 0),  //WPM_COLOR_DEFAULT
+    WPM_TABLE_DEFINE(120, 100, 80, 60, 40), //WPM_COLOR_MONO_GREEN
+    WPM_TABLE_DEFINE(160, 140, 120, 100, 80), //WPM_COLOR_MONO_BLUE
+    WPM_TABLE_DEFINE(0, 51, 102, 153, 204),  //WPM_COLOR_RAINBOW
+    WPM_TABLE_DEFINE(60, 45, 30, 15, 0),  //WPM_COLOR_FIRE
+};
+
+#define WPM_LEVEL_COUNT 4
+
+static uint8_t get_wpm_level_index(uint8_t wpm) {
+    wpm_table_t *tbl = &wpm_tables[g_config.wpm_color_scheme];
+    for (uint8_t i = 0; i < WPM_LEVEL_COUNT; i++) {
+        if (wpm < tbl->thresholds[i]) {
+            return i;
+        }
+    }
+    return WPM_LEVEL_COUNT;
+}
+
+static uint8_t get_wpm_hue(uint8_t level) {
+    if (level >= WPM_LEVEL_COUNT) level = WPM_LEVEL_COUNT;
+    return wpm_tables[g_config.wpm_color_scheme].color[level];
+}
+
+static uint8_t get_wpm_level_progress(uint8_t wpm, uint8_t level) {
+    if (level >= WPM_LEVEL_COUNT) {
+        // 最高级别，直接返回满进度
+        return 255;
+    }
+
+    wpm_table_t *tbl = &wpm_tables[g_config.wpm_color_scheme];
+    uint8_t lower = (level == 0) ? 0 : tbl->thresholds[level - 1];
+    uint8_t upper = tbl->thresholds[level];
+
+    if (wpm <= lower) return 0;
+    if (wpm >= upper) return 255;
+
+    return ((wpm - lower) * 255) / (upper - lower);
+}
+
+static void side_wpm_blink_meter(void) {
+    static uint32_t blink_timer = 0;
+    static bool     blink_state = false;
+
+    uint8_t wpm   = get_current_wpm();
+    uint8_t level = get_wpm_level_index(wpm);
+
+    int16_t blink_interval = WPM_BLINK_BASE_INTERVAL - ((int16_t)wpm * WPM_BLINK_WPM_MULTIPLIER);
+    if (blink_interval < WPM_BLINK_MIN_INTERVAL) blink_interval = WPM_BLINK_MIN_INTERVAL;
+
+    if (timer_elapsed32(blink_timer) > blink_interval) {
+        blink_timer = timer_read32();
+        blink_state = !blink_state;
+    }
+
+    uint8_t brightness      = blink_state ? WPM_BLINK_HIGH_BRIGHTNESS : WPM_BLINK_LOW_BRIGHTNESS;
+    uint8_t base_brightness = side_light_table[g_config.side_brightness];
+    uint8_t hue             = get_wpm_hue(level);
+
+    for (uint8_t i = 0; i < 5; i++) {
+        hsv_t hsv = {.h = hue, .s = 255, .v = (brightness * base_brightness) >> 8};
+        rgb_t rgb = hsv_to_rgb(hsv);
+        if (side_line == 45) { //判断 side_mode_b
+            user_set_side_rgb_color(SIDE_INDEX + i, rgb.r, rgb.g, rgb.b);
+        } else {
+            user_set_side_rgb_color(SIDE_INDEX + i, 0, 0, 0);
+        }
+    }
+}
+
+/**
+ * @brief WPM阻尼进度条 (低通滤波)
+ * @note 平滑追踪实际WPM，数学上最平滑
+ *       - alpha = 1/smooth_factor，值越大响应越慢
+ *       - display_wpm: LED条显示值
+ *       - peak_wpm: 峰值追踪，用于颜色
+ */
+void side_wpm_damped_meter(void) {
+    static int16_t display_wpm = 0;
+    static int16_t peak_wpm    = 0;
+
+    uint8_t actual_wpm = get_current_wpm();
+
+    // 低通滤波: display_wpm += (actual - display) / factor
+    // 上升快下降慢，平滑无跳跃
+    display_wpm += ((int16_t)actual_wpm - display_wpm) / WPM_SMOOTH_FACTOR;
+
+    // 峰值追踪: 更慢的滤波，保持颜色稳定
+    if (actual_wpm > peak_wpm) {
+        peak_wpm = actual_wpm;
+    } else {
+        peak_wpm += ((int16_t)actual_wpm - peak_wpm) / WPM_PEAK_SMOOTH_FACTOR;
+    }
+
+    // 计算LED点亮数量 (基于display_wpm)
+    // 截止阈值: 低于阈值且实际WPM为0时归零，避免残留微弱亮度
+    uint8_t display_u8 = (display_wpm < WPM_CUTOFF_THRESHOLD && actual_wpm == 0) ? 0 : (display_wpm < 0) ? 0 : (display_wpm > 255 ? 255 : display_wpm);
+    uint8_t peak_u8    = (peak_wpm < WPM_CUTOFF_THRESHOLD && actual_wpm == 0) ? 0 : (peak_wpm < 0) ? 0 : (peak_wpm > 255 ? 255 : peak_wpm);
+
+    uint8_t level    = get_wpm_level_index(display_u8);
+    uint8_t progress = get_wpm_level_progress(display_u8, level);
+
+    // 颜色基于峰值WPM
+    uint8_t hue             = get_wpm_hue(get_wpm_level_index(peak_u8));
+    uint8_t base_brightness = side_light_table[g_config.side_brightness];
+
+    // 渲染5个LED
+    for (uint8_t i = 0; i < 5; i++) {
+        uint8_t brightness;
+
+        if (i < level) {
+            brightness = 255;
+        } else if (i == level) {
+            brightness = progress;
+        } else {
+            user_set_side_rgb_color(SIDE_INDEX + i, 0, 0, 0);
+            continue;
+        }
+
+        hsv_t hsv = {.h = hue, .s = 255, .v = (brightness * base_brightness) >> 8};
+        rgb_t rgb = hsv_to_rgb(hsv);
+
+        if (side_line == 45) {
+            user_set_side_rgb_color(SIDE_INDEX + i, rgb.r, rgb.g, rgb.b);
+        } else {
+            user_set_side_rgb_color(SIDE_INDEX + i, 0, 0, 0);
+        }
+    }
+}
+
+static uint16_t wpm_to_heartbeat_cycle(uint8_t wpm) {
+    if (wpm == 0) return 2000;
+
+    int16_t cycle = 1200 - ((int16_t)wpm * 10);
+    if (cycle < 400) cycle = 400;
+    if (cycle > 2000) cycle = 2000;
+
+    return cycle;
+}
+
+static void side_wpm_heartbeat(void) {
+    static int16_t  smooth_wpm    = 0;
+    static uint16_t current_cycle = 2000;
+
+    uint8_t actual_wpm = get_current_wpm();
+
+    smooth_wpm += ((int16_t)actual_wpm - smooth_wpm) / WPM_SMOOTH_FACTOR;
+    if (smooth_wpm < WPM_CUTOFF_THRESHOLD && actual_wpm == 0) {
+        smooth_wpm = 0;
+    }
+    uint8_t display_wpm = (smooth_wpm < 0) ? 0 : (smooth_wpm > 255 ? 255 : smooth_wpm);
+
+    uint16_t target_cycle = wpm_to_heartbeat_cycle(display_wpm);
+    current_cycle += ((int16_t)target_cycle - (int16_t)current_cycle) / 4;
+
+    // 心跳各阶段时长 (从宏定义计算)
+    uint16_t hb_systole_duration   = WPM_HB_SYSTOLE_RISE_MS + WPM_HB_SYSTOLE_FALL_MS;
+    uint16_t hb_diastole_duration  = WPM_HB_DIASTOLE_RISE_MS + WPM_HB_DIASTOLE_FALL_MS;
+
+#    define HR_FSM_RESET()    \
+        do {                  \
+            state = HB_START; \
+        } while (0)
+
+    static enum {
+        HB_START = 0,
+        HB_REST,
+        HB_SYSTOLE_RISE,
+        HB_SYSTOLE_FALL,
+        HB_DIASTOLE_RISE,
+        HB_DIASTOLE_FALL,
+    } state = HB_START;
+
+    static uint32_t phase_timer = 0;
+    uint8_t         brightness  = 0;
+
+    switch (state) {
+        case HB_START:
+            phase_timer = timer_read32();
+            state       = HB_REST;
+            break;
+
+        case HB_REST: {
+            uint16_t rest_ms = current_cycle - hb_systole_duration - hb_diastole_duration;
+            if (rest_ms > current_cycle) rest_ms = 100;
+            if (timer_elapsed32(phase_timer) >= rest_ms) {
+                phase_timer = timer_read32();
+                state       = HB_SYSTOLE_RISE;
+            }
+            break;
+        }
+
+        case HB_SYSTOLE_RISE:
+            brightness = (timer_elapsed32(phase_timer) * 255) / WPM_HB_SYSTOLE_RISE_MS;
+            if (timer_elapsed32(phase_timer) >= WPM_HB_SYSTOLE_RISE_MS) {
+                phase_timer = timer_read32();
+                state       = HB_SYSTOLE_FALL;
+            }
+            break;
+
+        case HB_SYSTOLE_FALL: {
+            uint32_t elapsed = timer_elapsed32(phase_timer);
+            brightness       = 255 - (elapsed * 255) / WPM_HB_SYSTOLE_FALL_MS;
+            if (elapsed >= WPM_HB_SYSTOLE_FALL_MS) {
+                phase_timer = timer_read32();
+                state       = HB_DIASTOLE_RISE;
+            }
+            break;
+        }
+
+        case HB_DIASTOLE_RISE:
+            brightness = (timer_elapsed32(phase_timer) * WPM_HB_DIASTOLE_PEAK) / WPM_HB_DIASTOLE_RISE_MS;
+            if (timer_elapsed32(phase_timer) >= WPM_HB_DIASTOLE_RISE_MS) {
+                phase_timer = timer_read32();
+                state       = HB_DIASTOLE_FALL;
+            }
+            break;
+
+        case HB_DIASTOLE_FALL: {
+            uint32_t elapsed = timer_elapsed32(phase_timer);
+            brightness       = WPM_HB_DIASTOLE_PEAK - (elapsed * WPM_HB_DIASTOLE_PEAK) / WPM_HB_DIASTOLE_FALL_MS;
+            if (elapsed >= WPM_HB_DIASTOLE_FALL_MS) {
+                HR_FSM_RESET();
+            }
+            break;
+        }
+    }
+
+    uint8_t hue              = get_wpm_hue(get_wpm_level_index(display_wpm));
+    uint8_t base_brightness  = side_light_table[g_config.side_brightness];
+    uint8_t final_brightness = (brightness * base_brightness) >> 8;
+
+    hsv_t hsv = {.h = hue, .s = 255, .v = final_brightness};
+    rgb_t rgb = hsv_to_rgb(hsv);
+
+    for (uint8_t i = 0; i < 5; i++) {
+        if (side_line == 45) {
+            user_set_side_rgb_color(SIDE_INDEX + i, rgb.r, rgb.g, rgb.b);
+        } else {
+            user_set_side_rgb_color(SIDE_INDEX + i, 0, 0, 0);
+        }
+    }
+}
+
+void side_wpm_mode_show(void) {
+    if (dev_info.link_mode != LINK_USB) {
+        if (rf_link_show_time < RF_LINK_SHOW_TIME) return;
+        if (dev_info.rf_state != RF_CONNECT) return;
+    }
+
+    if (f_bat_hold) return;
+
+    set_all_side_off();
+
+    switch (g_config.wpm_display_mode) {
+        case WPM_MODE_PROGRESS:
+            side_wpm_damped_meter();
+            break;
+        case WPM_MODE_BLINK:
+            side_wpm_blink_meter();
+            break;
+        case WPM_MODE_HEARTBEAT:
+            side_wpm_heartbeat();
+            break;
+        default:
+            side_wpm_damped_meter();
+            break;
+    }
+}
+
 /**
  * @brief  bat_charging_breathe.
  */
@@ -1150,6 +1455,9 @@ void side_led_show(void) {
             break;
         case SIDE_STATIC:
             side_static_mode_show();
+            break;
+        case SIDE_WPM:
+            side_wpm_mode_show();
             break;
     }
 

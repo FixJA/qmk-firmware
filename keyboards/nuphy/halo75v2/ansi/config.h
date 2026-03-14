@@ -79,9 +79,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define RGB_MATRIX_KEYRELEASES
 
 #ifdef VIA_ENABLE
-#    define VIA_EEPROM_CUSTOM_CONFIG_SIZE 19 // sizeof via_config
+#    define VIA_EEPROM_CUSTOM_CONFIG_SIZE 20 // sizeof via_config
 #else
-#    define EECONFIG_KB_DATA_SIZE 17
+#    define EECONFIG_KB_DATA_SIZE 18
 #endif
 
 #define RGB_MATRIX_SLEEP
@@ -134,6 +134,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DEFAULT_BATTERY_INDICATOR_NUMERIC 0
 #define DEFAULT_DETECT_NUMLOCK 0
 #define DEFAULT_SHOW_SOCD_INDICATOR 0
+#define DEFAULT_WPM_DISPLAY_MODE  2  // WPM_MODE_HEARTBEAT
+#define DEFAULT_WPM_COLOR_SCHEME  0  
 /*
  * END OF DEFAULT VALUES
  */
