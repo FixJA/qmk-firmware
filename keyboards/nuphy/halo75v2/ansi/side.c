@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define SIDE_NEW 2
 #define SIDE_BREATH 3
 #define SIDE_STATIC 4
-#define SIDE_WPM 5
 
 #define SIDE_MODE_1 0
 #define SIDE_MODE_2 1
@@ -202,14 +201,14 @@ uint8_t side_old_color = 0;
 void    side_mode_a_control(uint8_t dir) {
     if (dir) {
         g_config.side_mode_a++;
-        if (g_config.side_mode_a > SIDE_WPM) {
+        if (g_config.side_mode_a > SIDE_STATIC) {
             g_config.side_mode_a = 0;
         }
     } else {
         if (g_config.side_mode_a > 0) {
             g_config.side_mode_a--;
         } else {
-            g_config.side_mode_a = 0;
+            g_config.side_mode_a = SIDE_STATIC;
         }
     }
     if (g_config.side_mode_a == SIDE_NEW) {
@@ -728,7 +727,7 @@ static void side_static_mode_show(void) {
 #define WPM_HB_DIASTOLE_PEAK     160  // 舒张期峰值
 
 // ==================== WPM灯效统一配置 ====================
-typedef enum { WPM_MODE_PROGRESS = 0, WPM_MODE_BLINK, WPM_MODE_HEARTBEAT, WPM_MODE_COUNT } wpm_display_mode_t;
+typedef enum { WPM_MODE_OFF = 0, WPM_MODE_PROGRESS, WPM_MODE_BLINK, WPM_MODE_HEARTBEAT, WPM_MODE_COUNT } wpm_display_mode_t;
 
 #define WPM_THRESHOLD 15, 30, 50, 70
 
@@ -1009,8 +1008,6 @@ void side_wpm_mode_show(void) {
 
     if (f_bat_hold) return;
 
-    set_all_side_off();
-
     switch (g_config.wpm_display_mode) {
         case WPM_MODE_PROGRESS:
             side_wpm_damped_meter();
@@ -1020,9 +1017,6 @@ void side_wpm_mode_show(void) {
             break;
         case WPM_MODE_HEARTBEAT:
             side_wpm_heartbeat();
-            break;
-        default:
-            side_wpm_damped_meter();
             break;
     }
 }
@@ -1473,12 +1467,10 @@ void side_led_show(void) {
         case SIDE_STATIC:
             side_static_mode_show();
             break;
-        case SIDE_WPM:
-            side_wpm_mode_show();
-            break;
     }
 
     bat_led_show();
+    side_wpm_mode_show();
     sys_led_show();
     sys_sw_led_show();
     sleep_sw_led_show();

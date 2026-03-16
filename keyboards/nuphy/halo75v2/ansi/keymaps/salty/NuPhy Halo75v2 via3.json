@@ -272,8 +272,7 @@
                                 "Mix",
                                 "New",
                                 "Breath",
-                                "Static",
-                                "WPM"
+                                "Static"
                             ]
                         },
                         {
@@ -292,21 +291,6 @@
                                 "5",
                                 "6",
                                 "7"
-                            ]
-                        },
-                        {
-                            "label": "WPM Mode",
-                            "showIf": "{id_side_light_mode_a} == 5",
-                            "type": "dropdown",
-                            "content": [
-                                "id_wpm_display_mode",
-                                0,
-                                30
-                            ],
-                            "options": [
-                                "Progress Bar",
-                                "Blink",
-                                "Heartbeat"
                             ]
                         },
                         {
@@ -650,6 +634,26 @@
                                 "id_toggle_detect_numlock_state",
                                 0,
                                 23
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "label": "WPM Display",
+                    "content": [
+                        {
+                            "label": "WPM Side Effect Mode",
+                            "type": "dropdown",
+                            "content": [
+                                "id_wpm_display_mode",
+                                0,
+                                30
+                            ],
+                            "options": [
+                                "Off",
+                                "Progress Bar",
+                                "Blink",
+                                "Heartbeat"
                             ]
                         }
                     ]

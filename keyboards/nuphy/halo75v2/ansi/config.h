@@ -134,7 +134,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DEFAULT_BATTERY_INDICATOR_NUMERIC 0
 #define DEFAULT_DETECT_NUMLOCK 0
 #define DEFAULT_SHOW_SOCD_INDICATOR 0
-#define DEFAULT_WPM_DISPLAY_MODE  2  // WPM_MODE_HEARTBEAT
+#define DEFAULT_WPM_DISPLAY_MODE  0  // WPM_MODE_OFF (Off by default, enable via VIA)
 /*
  * END OF DEFAULT VALUES
  */

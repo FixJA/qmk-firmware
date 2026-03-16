@@ -97,7 +97,7 @@ typedef struct {
     uint8_t detect_numlock_state : 1;
     uint8_t battery_indicator_numeric : 1;
     uint8_t show_socd_indicator : 1;
-    uint8_t wpm_display_mode : 2;   // 0-3 (WPM_MODE_PROGRESS, BLINK, HEARTBEAT)
+    uint8_t wpm_display_mode : 2;   // 0=Off, 1=Progress, 2=Blink, 3=Heartbeat
 } kb_config_t;
 
 #ifdef VIA_ENABLE
