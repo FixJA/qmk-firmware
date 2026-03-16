@@ -310,23 +310,6 @@
                             ]
                         },
                         {
-                            "label": "WPM Color",
-                            "showIf": "{id_side_light_mode_a} == 5",
-                            "type": "dropdown",
-                            "content": [
-                                "id_wpm_color_scheme",
-                                0,
-                                31
-                            ],
-                            "options": [
-                                "Default",
-                                "Mono Green",
-                                "Mono Blue",
-                                "Rainbow",
-                                "Fire"
-                            ]
-                        },
-                        {
                             "label": "Speed (higher is slower)",
                             "showIf": "{id_side_light_mode_a} < 4",
                             "type": "dropdown",
@@ -345,7 +328,7 @@
                         },
                         {
                             "label": "Color",
-                            "showIf": "{id_side_light_mode_a} != 2 && {id_side_light_mode_a} != 5",
+                            "showIf": "{id_side_light_mode_a} != 2",
                             "type": "dropdown",
                             "content": [
                                 "id_side_light_color",

@@ -43,3 +43,4 @@
 /* qmk features */
 #define FLOW_TAP_TERM 150
 #define DOUBLE_TAP_SHIFT_TURNS_ON_CAPS_WORD
+#define WPM_SAMPLE_SECONDS 3

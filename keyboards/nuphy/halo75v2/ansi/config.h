@@ -135,7 +135,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DEFAULT_DETECT_NUMLOCK 0
 #define DEFAULT_SHOW_SOCD_INDICATOR 0
 #define DEFAULT_WPM_DISPLAY_MODE  2  // WPM_MODE_HEARTBEAT
-#define DEFAULT_WPM_COLOR_SCHEME  0  
 /*
  * END OF DEFAULT VALUES
  */

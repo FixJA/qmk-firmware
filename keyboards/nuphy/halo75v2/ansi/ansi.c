@@ -579,7 +579,6 @@ void init_g_config(void) {
     g_config.battery_indicator_numeric    = DEFAULT_BATTERY_INDICATOR_NUMERIC;
     g_config.show_socd_indicator          = DEFAULT_SHOW_SOCD_INDICATOR;
     g_config.wpm_display_mode             = DEFAULT_WPM_DISPLAY_MODE;
-    g_config.wpm_color_scheme             = DEFAULT_WPM_COLOR_SCHEME;
 }
 
 uint32_t read_custom_config(void *data, uint32_t offset, uint32_t length) {
@@ -685,9 +684,6 @@ void via_config_set_value(uint8_t *data) {
         case id_wpm_display_mode:
             g_config.wpm_display_mode = *value_data;
             break;
-        case id_wpm_color_scheme:
-            g_config.wpm_color_scheme = *value_data;
-            break;
     }
 }
 
@@ -753,9 +749,6 @@ void via_config_get_value(uint8_t *data) {
             break;
         case id_wpm_display_mode:
             *value_data = g_config.wpm_display_mode;
-            break;
-        case id_wpm_color_scheme:
-            *value_data = g_config.wpm_color_scheme;
             break;
     }
 }

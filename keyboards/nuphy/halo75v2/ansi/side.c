@@ -707,8 +707,8 @@ static void side_static_mode_show(void) {
 }
 
 // ==================== WPM灯效配置宏 ====================
-
-// 低通滤波参数
+//衰减速度调 WPM SAMPLE SECONDS
+// 低通滤波参数 
 #define WPM_SMOOTH_FACTOR       8   // display_wpm 滤波系数
 #define WPM_PEAK_SMOOTH_FACTOR  16  // peak_wpm 滤波系数
 #define WPM_CUTOFF_THRESHOLD    10  // 截止阈值
@@ -732,25 +732,34 @@ typedef enum { WPM_MODE_PROGRESS = 0, WPM_MODE_BLINK, WPM_MODE_HEARTBEAT, WPM_MO
 
 #define WPM_THRESHOLD 15, 30, 50, 70
 
-#define WPM_TABLE_DEFINE(...) \
-    {.color = {__VA_ARGS__}, .thresholds = {WPM_THRESHOLD}}
+#define WPM_TABLE_DEFINE(h0, h1, h2, h3, h4, s0, s1, s2, s3, s4) \
+    {.hue = {h0, h1, h2, h3, h4}, .saturation = {s0, s1, s2, s3, s4}, .thresholds = {WPM_THRESHOLD}}
+
 typedef struct {
-    uint8_t color[5];
+    uint8_t hue[5];
+    uint8_t saturation[5];
     uint8_t thresholds[5];
 } wpm_table_t;
 
+// WPM color tables use g_config.side_color (0-7) for color selection
+// Each entry provides 5 hue/saturation values for WPM levels, derived from side_color_lib
+// Hue values: 0=red, 21=orange, 43=yellow, 85=green, 128=cyan, 170=blue, 200=purple
+// Saturation: 255=full color, lower values = more desaturated/pastel
 wpm_table_t wpm_tables[] = {
-    WPM_TABLE_DEFINE(192, 128, 96, 64, 0),  //WPM_COLOR_DEFAULT
-    WPM_TABLE_DEFINE(120, 100, 80, 60, 40), //WPM_COLOR_MONO_GREEN
-    WPM_TABLE_DEFINE(160, 140, 120, 100, 80), //WPM_COLOR_MONO_BLUE
-    WPM_TABLE_DEFINE(0, 51, 102, 153, 204),  //WPM_COLOR_RAINBOW
-    WPM_TABLE_DEFINE(60, 45, 30, 15, 0),  //WPM_COLOR_FIRE
+    WPM_TABLE_DEFINE(0, 20, 40, 60, 80, 255, 255, 255, 255, 255),       // 0: red
+    WPM_TABLE_DEFINE(21, 41, 61, 81, 101, 255, 255, 255, 255, 255),      // 1: orange
+    WPM_TABLE_DEFINE(43, 63, 83, 103, 123, 255, 255, 255, 255, 255),      // 2: yellow
+    WPM_TABLE_DEFINE(85, 105, 125, 145, 165, 255, 255, 255, 255, 255),   // 3: green
+    WPM_TABLE_DEFINE(128, 148, 168, 188, 208, 255, 255, 255, 255, 255), // 4: cyan
+    WPM_TABLE_DEFINE(170, 190, 210, 230, 250, 255, 255, 255, 255, 255), // 5: blue
+    WPM_TABLE_DEFINE(200, 220, 240, 10, 30, 255, 255, 255, 255, 255), // 6: purple-pink
+    WPM_TABLE_DEFINE(0, 20, 40, 60, 80, 93, 93, 93, 93, 93),            // 7: light-pink (desaturated)
 };
 
 #define WPM_LEVEL_COUNT 4
 
 static uint8_t get_wpm_level_index(uint8_t wpm) {
-    wpm_table_t *tbl = &wpm_tables[g_config.wpm_color_scheme];
+    wpm_table_t *tbl = &wpm_tables[g_config.side_color];
     for (uint8_t i = 0; i < WPM_LEVEL_COUNT; i++) {
         if (wpm < tbl->thresholds[i]) {
             return i;
@@ -761,7 +770,12 @@ static uint8_t get_wpm_level_index(uint8_t wpm) {
 
 static uint8_t get_wpm_hue(uint8_t level) {
     if (level >= WPM_LEVEL_COUNT) level = WPM_LEVEL_COUNT;
-    return wpm_tables[g_config.wpm_color_scheme].color[level];
+    return wpm_tables[g_config.side_color].hue[level];
+}
+
+static uint8_t get_wpm_saturation(uint8_t level) {
+    if (level >= WPM_LEVEL_COUNT) level = WPM_LEVEL_COUNT;
+    return wpm_tables[g_config.side_color].saturation[level];
 }
 
 static uint8_t get_wpm_level_progress(uint8_t wpm, uint8_t level) {
@@ -770,7 +784,7 @@ static uint8_t get_wpm_level_progress(uint8_t wpm, uint8_t level) {
         return 255;
     }
 
-    wpm_table_t *tbl = &wpm_tables[g_config.wpm_color_scheme];
+    wpm_table_t *tbl = &wpm_tables[g_config.side_color];
     uint8_t lower = (level == 0) ? 0 : tbl->thresholds[level - 1];
     uint8_t upper = tbl->thresholds[level];
 
@@ -798,9 +812,10 @@ static void side_wpm_blink_meter(void) {
     uint8_t brightness      = blink_state ? WPM_BLINK_HIGH_BRIGHTNESS : WPM_BLINK_LOW_BRIGHTNESS;
     uint8_t base_brightness = side_light_table[g_config.side_brightness];
     uint8_t hue             = get_wpm_hue(level);
+    uint8_t sat             = get_wpm_saturation(level);
 
     for (uint8_t i = 0; i < 5; i++) {
-        hsv_t hsv = {.h = hue, .s = 255, .v = (brightness * base_brightness) >> 8};
+        hsv_t hsv = {.h = hue, .s = sat, .v = (brightness * base_brightness) >> 8};
         rgb_t rgb = hsv_to_rgb(hsv);
         if (side_line == 45) { //判断 side_mode_b
             user_set_side_rgb_color(SIDE_INDEX + i, rgb.r, rgb.g, rgb.b);
@@ -844,6 +859,7 @@ void side_wpm_damped_meter(void) {
 
     // 颜色基于峰值WPM
     uint8_t hue             = get_wpm_hue(get_wpm_level_index(peak_u8));
+    uint8_t sat             = get_wpm_saturation(get_wpm_level_index(peak_u8));
     uint8_t base_brightness = side_light_table[g_config.side_brightness];
 
     // 渲染5个LED
@@ -859,7 +875,7 @@ void side_wpm_damped_meter(void) {
             continue;
         }
 
-        hsv_t hsv = {.h = hue, .s = 255, .v = (brightness * base_brightness) >> 8};
+        hsv_t hsv = {.h = hue, .s = sat, .v = (brightness * base_brightness) >> 8};
         rgb_t rgb = hsv_to_rgb(hsv);
 
         if (side_line == 45) {
@@ -969,10 +985,11 @@ static void side_wpm_heartbeat(void) {
     }
 
     uint8_t hue              = get_wpm_hue(get_wpm_level_index(display_wpm));
+    uint8_t sat              = get_wpm_saturation(get_wpm_level_index(display_wpm));
     uint8_t base_brightness  = side_light_table[g_config.side_brightness];
     uint8_t final_brightness = (brightness * base_brightness) >> 8;
 
-    hsv_t hsv = {.h = hue, .s = 255, .v = final_brightness};
+    hsv_t hsv = {.h = hue, .s = sat, .v = final_brightness};
     rgb_t rgb = hsv_to_rgb(hsv);
 
     for (uint8_t i = 0; i < 5; i++) {
