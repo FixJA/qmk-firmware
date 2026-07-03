@@ -272,6 +272,7 @@ void side_rgb_refresh(void);
 
 void led_pwr_wake_handle(void) {
     if (!rgb_led_on) {
+        rgb_matrix_set_color_all(0, 0, 0);
         pwr_rgb_led_on();
         rgb_matrix_update_pwm_buffers();
     }
