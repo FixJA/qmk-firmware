@@ -4,6 +4,7 @@
 #include "../indicator.h"
 #include "../timer.h"
 #include "../wireless.h"
+#include "mcu_pwr.h"
 #include "keys.h"
 #include "keyboard.h"
 
@@ -18,6 +19,7 @@ void switch_dev_link(uint8_t mode);
 void sleep_handle(void);
 
 extern DEV_INFO_STRUCT dev_info;
+extern bool            f_wakeup_prepare;
 
 bool f_bat_hold              = 0;
 bool f_sys_show              = 0;
@@ -323,6 +325,12 @@ void suspend_power_down_kb(void) {
 }
 
 void suspend_wakeup_init_kb(void) {
+    if (f_wakeup_prepare) {
+        f_wakeup_prepare = false;
+        exit_light_sleep();
+        no_act_time = 0;
+    }
+
     rgb_matrix_set_suspend_state(false);
     suspend_wakeup_init_user();
 }
