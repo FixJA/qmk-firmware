@@ -60,7 +60,6 @@ bool rgb_matrix_indicators_kb(void) {
 }
 
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
-    rgb_matrix_set_color(RGB_MATRIX_LED_COUNT, 0, 0, 0);
     nuphy_highlight_custom_keys(led_min, led_max);
 
     return rgb_matrix_indicators_advanced_user(led_min, led_max);
