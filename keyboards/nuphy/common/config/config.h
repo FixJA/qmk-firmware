@@ -46,12 +46,16 @@
 #    define DEFAULT_SLEEP_TIMEOUT 15
 #endif
 
+#ifndef DEBOUNCE
+#    define DEBOUNCE 5
+#endif
+
 #ifndef PRESS_DEBOUNCE
 #    define PRESS_DEBOUNCE (DEBOUNCE)
 #endif
 
 #ifndef RELEASE_DEBOUNCE
-#    define RELEASE_DEBOUNCE (DEBOUNCE)
+#    define RELEASE_DEBOUNCE 10
 #endif
 
 #ifndef DEFAULT_CAPS_INDICATOR_TYPE
