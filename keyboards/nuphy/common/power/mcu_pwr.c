@@ -113,6 +113,8 @@ static bool sleeping     = false;
 
 static bool rgb_led_on  = 0;
 static bool side_led_on = 0;
+static bool rgb_led_powered_off  = 0;
+static bool side_led_powered_off = 0;
 
 void rgb_matrix_update_pwm_buffers(void);
 void pwr_side_led_off(void);
@@ -260,10 +262,15 @@ void exit_light_sleep(void) {
 }
 
 void led_pwr_sleep_handle(void) {
+    rgb_led_powered_off  = false;
+    side_led_powered_off = false;
+
     if (rgb_led_on) {
+        rgb_led_powered_off = true;
         pwr_rgb_led_off();
     }
     if (side_led_on) {
+        side_led_powered_off = true;
         pwr_side_led_off();
     }
 }
@@ -271,13 +278,13 @@ void led_pwr_sleep_handle(void) {
 void side_rgb_refresh(void);
 
 void led_pwr_wake_handle(void) {
-    if (!rgb_led_on) {
+    if (rgb_led_powered_off) {
         rgb_matrix_set_color_all(0, 0, 0);
         pwr_rgb_led_on();
         rgb_matrix_driver.init();
         rgb_matrix_update_pwm_buffers();
     }
-    if (!side_led_on) {
+    if (side_led_powered_off) {
         pwr_side_led_on();
         side_rgb_refresh();
     }
