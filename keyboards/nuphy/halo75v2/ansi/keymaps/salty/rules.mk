@@ -1,0 +1,5 @@
+VIA_ENABLE = yes
+TAP_DANCE_ENABLE = yes
+CAPS_WORD_ENABLE = no
+RGB_MATRIX_CUSTOM_USER = yes
+override EXTRAFLAGS += -I$(KEYMAP_PATH)/../default
