@@ -164,6 +164,13 @@
 #    define DEFAULT_AMBIENT_STATIC_SAT DEFAULT_STATIC_SATURATION
 #endif
 
+#ifndef CAPS_LOCK_ROW // matrix position of the caps lock key, used for the under-key caps indicator
+#    define CAPS_LOCK_ROW 3
+#endif
+#ifndef CAPS_LOCK_COL
+#    define CAPS_LOCK_COL 0
+#endif
+
 #ifndef NUPHY_CONFIG_INIT_MAGIC
 #    define NUPHY_CONFIG_INIT_MAGIC 0x46
 #endif

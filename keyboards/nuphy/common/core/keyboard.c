@@ -540,7 +540,7 @@ bool rgb_matrix_indicators_nuphy(void) {
 #ifdef WS2812_SIDE_REFRESH
     static uint32_t side_refresh_time = 0;
 #endif
-    uint8_t caps_key_led_idx = get_led_index(3, 0);
+    uint8_t caps_key_led_idx = get_led_index(CAPS_LOCK_ROW, CAPS_LOCK_COL);
     bool    showCapsLock     = false;
 
     if (dev_info.link_mode == LINK_USB) {
