@@ -251,7 +251,7 @@
                     "label": "Halo Light",
                     "content": [
                         {
-                            "label": "Mode",
+                            "label": "Side Mode",
                             "type": "dropdown",
                             "content": [
                                 "id_side_light_mode",
@@ -259,16 +259,34 @@
                                 10
                             ],
                             "options": [
-                                "Wawe",
+                                "Wave",
                                 "Mix",
-                                "Static",
+                                "New",
                                 "Breath",
-                                "Off"
+                                "Static"
+                            ]
+                        },
+                        {
+                            "label": "Ambient Mode",
+                            "type": "dropdown",
+                            "content": [
+                                "id_ambient_light_mode",
+                                0,
+                                20
+                            ],
+                            "options": [
+                                "1",
+                                "2",
+                                "3",
+                                "4",
+                                "5",
+                                "6",
+                                "7"
                             ]
                         },
                         {
                             "label": "Speed (higher is slower)",
-                            "showIf": "{id_side_light_mode} != 4 && {id_side_light_mode} != 2",
+                            "showIf": "{id_side_light_mode} != 4",
                             "type": "dropdown",
                             "content": [
                                 "id_side_light_speed",
@@ -284,8 +302,72 @@
                             ]
                         },
                         {
+                            "label": "Dual Color",
+                            "showIf": "{id_side_light_mode} == 2",
+                            "type": "dropdown",
+                            "content": [
+                                "id_side_light_color",
+                                0,
+                                12
+                            ],
+                            "options": [
+                                "Cyan + Blue",
+                                "Blue + Orange",
+                                "Cyan + Warm"
+                            ]
+                        },
+                        {
+                            "label": "Color Variant",
+                            "showIf": "{id_side_light_mode} == 0 || {id_side_light_mode} == 3",
+                            "type": "dropdown",
+                            "content": [
+                                "id_side_light_color",
+                                0,
+                                12
+                            ],
+                            "options": [
+                                "Palette Color",
+                                "Custom Color",
+                                "Rainbow / Auto"
+                            ]
+                        },
+                        {
+                            "label": "Color Variant",
+                            "showIf": "{id_side_light_mode} == 4",
+                            "type": "dropdown",
+                            "content": [
+                                "id_side_light_color",
+                                0,
+                                12
+                            ],
+                            "options": [
+                                "Palette Color",
+                                "Custom Color"
+                            ]
+                        },
+                        {
+                            "label": "Palette Color",
+                            "showIf": "({id_side_light_mode} == 0 || {id_side_light_mode} == 3 || {id_side_light_mode} == 4) && {id_side_light_color} == 0",
+                            "type": "dropdown",
+                            "content": [
+                                "id_ambient_light_color",
+                                0,
+                                22
+                            ],
+                            "options": [
+                                "Red",
+                                "Orange",
+                                "Yellow",
+                                "Green",
+                                "Cyan",
+                                "Blue",
+                                "Purple",
+                                "Light-Purple"
+                            ]
+                        },
+                        {
                             "label": "Static Color",
-                            "showIf": "{id_side_light_mode} == 0 || {id_side_light_mode} == 2 || {id_side_light_mode} == 3",
+                            "showIf": "({id_side_light_mode} == 0 || {id_side_light_mode} == 3 || {id_side_light_mode} == 4) && {id_side_light_color} == 1",
                             "type": "color",
                             "content": [
                                 "id_side_light_static_color",
@@ -295,7 +377,6 @@
                         },
                         {
                             "label": "Brightness",
-                            "showIf": "{id_side_light_mode} != 4",
                             "type": "range",
                             "content": [
                                 "id_side_light_brightness",
