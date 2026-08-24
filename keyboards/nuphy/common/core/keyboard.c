@@ -50,7 +50,7 @@ extern host_driver_t      rf_host_driver;
 
 static void apply_os_mode(bool switch_high, bool show_indicator) {
     uint8_t target_sys   = switch_high ? (NUPHY_OS_SWITCH_HIGH_IS_WIN ? SYS_SW_WIN : SYS_SW_MAC) : (NUPHY_OS_SWITCH_HIGH_IS_WIN ? SYS_SW_MAC : SYS_SW_WIN);
-    uint8_t target_layer = (target_sys == SYS_SW_MAC) ? 0 : 2;
+    uint8_t target_layer = (target_sys == SYS_SW_MAC) ? 0 : NUPHY_WIN_BASE_LAYER;
     bool    target_nkro  = (target_sys != SYS_SW_MAC);
 
     if (dev_info.sys_sw_state != target_sys) {
@@ -123,7 +123,7 @@ void long_press_key(void) {
                 default_layer_set(1 << 0);
                 keymap_config.nkro = 0;
             } else {
-                default_layer_set(1 << 2);
+                default_layer_set(1 << NUPHY_WIN_BASE_LAYER);
                 keymap_config.nkro = 1;
             }
         }

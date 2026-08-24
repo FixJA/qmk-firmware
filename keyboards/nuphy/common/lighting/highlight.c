@@ -43,7 +43,7 @@ void nuphy_highlight_custom_keys(uint8_t led_min, uint8_t led_max) {
     }
 
     uint8_t layer = get_highest_layer(layer_state);
-    if (layer == 0 || layer == 2) {
+    if (layer == 0 || layer == NUPHY_WIN_BASE_LAYER) {
         return;
     }
 

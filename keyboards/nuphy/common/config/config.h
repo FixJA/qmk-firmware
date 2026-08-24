@@ -26,6 +26,13 @@
 #    define NUPHY_SIDE_LIGHTING_ENABLED 1
 #endif
 
+// Keymap layer holding the Windows base layout; the OS switch sets it as the
+// default layer. Keyboards whose layer order matches the factory firmware
+// (e.g. halo65v2: 2=Mac Fn2, 3=Win) override this.
+#ifndef NUPHY_WIN_BASE_LAYER
+#    define NUPHY_WIN_BASE_LAYER 2
+#endif
+
 #ifndef NUPHY_AMBIENT_LIGHTING_ENABLED
 #    define NUPHY_AMBIENT_LIGHTING_ENABLED 1
 #endif
