@@ -195,8 +195,8 @@
                             ],
                             "options": [
                                 "Palette Color",
-                                "Rainbow / Auto",
-                                "Custom Color"
+                                "Custom Color",
+                                "Rainbow / Auto"
                             ]
                         },
                         {
@@ -235,7 +235,7 @@
                         },
                         {
                             "label": "Static Color",
-                            "showIf": "({id_side_light_mode} == 0 || {id_side_light_mode} == 3 || {id_side_light_mode} == 4) && {id_side_light_color} == 2",
+                            "showIf": "({id_side_light_mode} == 0 || {id_side_light_mode} == 3 || {id_side_light_mode} == 4) && {id_side_light_color} == 1",
                             "type": "color",
                             "content": [
                                 "id_side_light_static_color",
