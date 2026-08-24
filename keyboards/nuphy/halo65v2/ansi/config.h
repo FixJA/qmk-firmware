@@ -121,6 +121,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DEFAULT_USB_SLEEP_TOGGLE false
 #define DEFAULT_DEEP_SLEEP_TOGGLE true
 #define NUPHY_OS_SWITCH_HIGH_IS_WIN 1
+// Factory layer order: 0=Mac, 1=Mac Fn1, 2=Mac Fn2, 3=Win, 4=Win Fn1, 5=Win Fn2, 6=side lighting.
+#define NUPHY_WIN_BASE_LAYER 3
 #define DEFAULT_SLEEP_TIMEOUT 5
 #define DEFAULT_TOGGLE_POWER_ON_ANIMATION 1
 #define DEFAULT_CAPS_INDICATOR_TYPE CAPS_INDICATOR_SIDE
