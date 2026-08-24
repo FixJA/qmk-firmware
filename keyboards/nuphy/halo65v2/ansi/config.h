@@ -140,6 +140,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DEFAULT_DETECT_NUMLOCK 0
 #define WIN_LOCK_ROW 4
 #define WIN_LOCK_COL 1
+#define CAPS_LOCK_ROW 2 // 65% layout: caps sits one row higher than the 75%/96% default (3,0)
+#define CAPS_LOCK_COL 0
 #define NUM_LOCK_ROW 0
 #define NUM_LOCK_COL 14
 /*
