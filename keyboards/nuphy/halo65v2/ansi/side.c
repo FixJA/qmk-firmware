@@ -198,7 +198,7 @@ static void clear_power_tail(uint8_t start) {
     set_power_tail_rgb(start, 0, 0, 0);
 }
 
-// side_color semantics in the Wave/Breath/Static context: 0 = palette (index in ambient_color), 1 = rainbow/auto, 2 = custom HSV
+// side_color semantics in the Wave/Breath/Static context: 0 = palette (index in ambient_color), 1 = custom HSV, 2 = rainbow/auto
 static rgb_t side_palette_base_color(void) {
     rgb_t rgb;
 
@@ -231,16 +231,17 @@ static void apply_side_mode_context_swap(void) {
     }
 
     if (last_side_mode != 0xFF) { // skip the boot transition: stored values are already context-consistent
-        if (mode == SIDE_NEW) {
+        if (mode == SIDE_NEW) {                  // entering New: park the family value, load New's own
             side_old_color                    = keyboard_config.lights.side_color;
             keyboard_config.lights.side_color = side_new_color;
-        } else if (mode == SIDE_BREATH) {
+        } else if (last_side_mode == SIDE_NEW) { // leaving New to anywhere: save New's value, restore the family value
             side_new_color                    = keyboard_config.lights.side_color;
             keyboard_config.lights.side_color = side_old_color;
         }
     }
 
-    last_side_mode = mode;
+    side_play_point = 0; // reset animation phase on any mode change; covers the VIA path that bypasses adjust_side_mode
+    last_side_mode  = mode;
 }
 
 static void apply_ambient_layout(void) {
@@ -315,10 +316,10 @@ static void adjust_color(uint8_t dir) {
         if (keyboard_config.lights.side_color == 0) { // palette: cycle the 8 colors, rolling into rainbow at the end like the stock firmware
             keyboard_config.lights.ambient_color++;
             if (keyboard_config.lights.ambient_color > 7) {
-                keyboard_config.lights.side_color    = 1;
+                keyboard_config.lights.side_color    = 2;
                 keyboard_config.lights.ambient_color = 0;
             }
-        } else if (keyboard_config.lights.side_color == 1) { // rainbow/auto: first press falls back to the palette
+        } else if (keyboard_config.lights.side_color == 2) { // rainbow/auto: first press falls back to the palette
             keyboard_config.lights.side_color    = 0;
             keyboard_config.lights.ambient_color = 0;
         } else { // custom: step the hue
@@ -387,7 +388,7 @@ static bool consume_animation_step(uint8_t mode, uint8_t speed, uint16_t *play_c
 static void side_wave_mode_show(void) {
     uint8_t play_index;
     uint8_t brightness = clamp_brightness(keyboard_config.lights.side_brightness);
-    bool    rainbow    = keyboard_config.lights.side_color == 1;
+    bool    rainbow    = keyboard_config.lights.side_color == 2;
 
     if (!consume_animation_step(SIDE_WAVE, keyboard_config.lights.side_speed, &side_play_cnt)) {
         return;
@@ -532,7 +533,7 @@ static void side_breathe_mode_show(void) {
     static uint8_t auto_hue     = 0;
     static bool    prev_variant = false;
     uint8_t        brightness   = clamp_brightness(keyboard_config.lights.side_brightness);
-    bool           auto_color   = keyboard_config.lights.side_color == 1;
+    bool           auto_color   = keyboard_config.lights.side_color == 2;
 
     if (!consume_animation_step(SIDE_BREATH, keyboard_config.lights.side_speed, &side_play_cnt)) {
         return;
@@ -1027,7 +1028,7 @@ static void side_power_mode_show(void) {
     }
 
     for (uint8_t i = 0; i < HALO_LED_COUNT; i++) {
-        if (keyboard_config.lights.side_mode == SIDE_MIX || (keyboard_config.lights.side_mode == SIDE_WAVE && keyboard_config.lights.side_color == 1)) { // Mix and Wave's rainbow variant share the rainbow fill
+        if (keyboard_config.lights.side_mode == SIDE_MIX || (keyboard_config.lights.side_mode == SIDE_WAVE && keyboard_config.lights.side_color == 2)) { // Mix and Wave's rainbow variant share the rainbow fill
             r_temp = flow_rainbow_color_tab[side_play_point % FLOW_COLOR_TAB_LEN][0];
             g_temp = flow_rainbow_color_tab[side_play_point % FLOW_COLOR_TAB_LEN][1];
             b_temp = flow_rainbow_color_tab[side_play_point % FLOW_COLOR_TAB_LEN][2];
