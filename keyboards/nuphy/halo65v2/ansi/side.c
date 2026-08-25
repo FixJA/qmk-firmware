@@ -727,6 +727,10 @@ void set_side_rgb(uint8_t r, uint8_t g, uint8_t b) {
 }
 
 void set_indicator_on_side(uint8_t r, uint8_t g, uint8_t b) {
+    // the power-on sweep owns the side strip; rgb-task indicator writes would clobber it
+    if (f_power_show) {
+        return;
+    }
     set_side_rgb(r, g, b);
 }
 
