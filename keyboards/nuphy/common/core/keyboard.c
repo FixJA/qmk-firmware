@@ -507,6 +507,11 @@ void wireless_mode_show(void) {
 #if (WORK_MODE == THREE_MODE)
     static bool flag_power_on = 1;
 #endif
+    static uint32_t link_show_timer = 0;
+
+    if (link_show_timer == 0) {
+        link_show_timer = timer_read32();
+    }
 
     if (dev_info.link_mode == LINK_RF_24) {
         r_temp = 0x00;
@@ -532,7 +537,11 @@ void wireless_mode_show(void) {
     if (rf_blink_cnt) {
         rf_show_blink();
     } else if (rf_link_show_time < RF_LINK_SHOW_TIME) {
-        set_indicator_on_side(r_temp, g_temp, b_temp);
+        if ((timer_elapsed32(link_show_timer) / 250) % 2 == 0) {
+            set_indicator_on_side(r_temp, g_temp, b_temp);
+        } else {
+            set_indicator_on_side(0x00, 0x00, 0x00);
+        }
     }
 }
 
