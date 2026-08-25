@@ -82,6 +82,7 @@ static const uint8_t power_led_index_tab[HALO_LED_COUNT] = {
 };
 
 bool     f_charging        = true;
+bool     f_bat_displaying  = false;
 uint8_t  side_play_point   = 0;
 uint16_t side_play_cnt     = 0;
 uint32_t led_play_timer    = 0;
@@ -902,15 +903,21 @@ void bat_led_show(void) {
     static uint8_t  charge_state     = 0;
     static uint8_t  bat_percent      = 0;
     static bool     f_init           = true;
+    static bool     f_started        = false;
 
-    if (dev_info.link_mode != LINK_USB) {
-        if (rf_link_show_time < RF_LINK_SHOW_TIME) {
-            return;
-        }
+    // wireless gates only gate the start; once shown, the display plays out its
+    // window instead of being cut off by link-state resets
+    if (!f_started) {
+        if (dev_info.link_mode != LINK_USB) {
+            if (rf_link_show_time < RF_LINK_SHOW_TIME) {
+                return;
+            }
 
-        if (dev_info.rf_state != RF_CONNECT) {
-            return;
+            if (dev_info.rf_state != RF_CONNECT) {
+                return;
+            }
         }
+        f_started = true;
     }
 
     if (f_init) {
@@ -971,9 +978,15 @@ void bat_led_show(void) {
         }
     }
 
-    if (f_bat_hold || bat_show_flag) {
+    f_bat_displaying = f_bat_hold || bat_show_flag;
+
+    if (f_bat_displaying) {
         bat_percent_led(bat_percent);
     }
+}
+
+bool nuphy_bat_display_active(void) {
+    return f_bat_displaying;
 }
 
 void device_reset_show(void) {

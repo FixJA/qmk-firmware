@@ -500,10 +500,19 @@ void rf_show_blink(void) {
     set_indicator_on_side(r_temp, g_temp, b_temp);
 }
 
+// keyboards with a side battery display override this so the link display yields while it shows
+__attribute__((weak)) bool nuphy_bat_display_active(void) {
+    return false;
+}
+
 /**
  * @brief  rf_led_show.
  */
 void wireless_mode_show(void) {
+    if (nuphy_bat_display_active()) {
+        return;
+    }
+
 #if (WORK_MODE == THREE_MODE)
     static bool flag_power_on = 1;
 #endif
