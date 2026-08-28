@@ -33,6 +33,7 @@ bool f_rgb_test_press        = 0;
 bool f_debounce_press_show   = 0;
 bool f_debounce_release_show = 0;
 bool f_sleep_timeout_show    = 0;
+bool f_layer_show            = 0;
 
 uint8_t  rf_blink_cnt          = 0;
 uint8_t  rf_sw_temp            = 0;
@@ -621,6 +622,14 @@ bool rgb_matrix_indicators_nuphy(void) {
     if (f_sleep_timeout_show) { // cyan numbers - sleep timeout
         rgb_matrix_set_color(two_digit_decimals_led(keyboard_config.common.sleep_timeout), 0x00, 0x80, 0x80);
         rgb_matrix_set_color(two_digit_ones_led(keyboard_config.common.sleep_timeout), 0x00, 0x80, 0x80);
+    }
+
+    // white number - active layer; mutually exclusive with the numeric battery display, battery wins.
+    // the Mac/Win base layer lives in default_layer_state (default_layer_set), MO/LT layers in layer_state
+    if (f_layer_show && !(f_bat_hold && keyboard_config.custom.battery_indicator_numeric)) {
+        uint8_t layer = get_highest_layer(layer_state | default_layer_state);
+        uint8_t col   = layer == 0 ? 10 : layer; // layer 0 lights the "0" key
+        user_set_rgb_color(get_led_index(NUMBER_KEY_ROW, col), 0x80, 0x80, 0x80);
     }
 
     if (keyboard_config.custom.detect_numlock_state) {

@@ -53,6 +53,7 @@ enum custom_keycodes {
     TOG_BAT_IND_NUM,
     FW_VERSION,
     TOG_POWER_ON_ANIMATION,
+    LAYER_SHOW,
 };
 
 #define MAC_PRT G(S(KC_3))

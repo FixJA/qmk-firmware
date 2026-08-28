@@ -69,6 +69,8 @@ void nuphy_highlight_custom_keys(uint8_t led_min, uint8_t led_max) {
                 rgb_matrix_set_color(index, RGB_RED);
             } else if (keycode == SLEEP_MODE || keycode == TOG_USB_SLP || keycode == TOG_DEEP_SLEEP || (keycode >= SLEEP_TIMEOUT_INC && keycode <= SLEEP_TIMEOUT_SHOW)) {
                 rgb_matrix_set_color(index, RGB_CYAN);
+            } else if (keycode == LAYER_SHOW) {
+                rgb_matrix_set_color(index, RGB_WHITE);
             } else if (keycode >= LNK_USB && keycode <= LNK_BLE3) {
                 if (dev_info.link_mode != LINK_USB) {
                     rgb_matrix_set_color(index, RGB_BLUE);
