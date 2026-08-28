@@ -845,6 +845,10 @@
         {
             "name": "TOG POWERON\nANIM",
             "title": "Toggle Power On Animation"
+        },
+        {
+            "name": "Layer\nShow",
+            "title": "Layer Show"
         }
     ]
 }
