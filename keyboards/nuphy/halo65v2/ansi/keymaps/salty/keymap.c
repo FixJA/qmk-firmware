@@ -15,7 +15,7 @@ tap_dance_action_t tap_dance_actions[] = {
 
 // clang-format off
 // Factory layer order (nuphy-src): 0=Mac, 1=Mac Fn1, 2=Mac Fn2, 3=Win,
-// 4=Win Fn1, 5=Win Fn2, 6=side lighting; layers 7-8 personal (7=nav, 8=spare).
+// 4=Win Fn1, 5=Win Fn2, 6=side lighting; layers 7-8 personal (7=nav, 8=QWERTY home row).
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 // layer 0 Mac
 [0] = LAYOUT(
@@ -51,7 +51,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 // layer 4 Win Fn1: factory F-key arrangement, custom tuning keys on factory-empty slots
 [4] = LAYOUT(
-    KC_GRV,     KC_F1,      KC_F2,      KC_F3,      KC_F4,      KC_F5,      KC_F6,      KC_F7,      KC_F8,      KC_F9,      KC_F10,     KC_F11,     KC_F12,     KC_PSCR,                TOG_POWER_ON_ANIMATION,
+    KC_GRV,     KC_F1,      KC_F2,      KC_F3,      KC_F4,      KC_F5,      KC_F6,      KC_F7,      KC_F8,      KC_F9,      KC_F10,     KC_F11,     KC_F12,     KC_PSCR,                TG(8),
     _______,    LNK_BLE1,   LNK_BLE2,   LNK_BLE3,   LNK_RF,     _______,    DEBOUNCE_PRESS_DEC,     DEBOUNCE_PRESS_SHOW,    DEBOUNCE_PRESS_INC,     TOG_DEEP_SLEEP, TOG_USB_SLP, DEV_RESET, SLEEP_MODE, BAT_SHOW, LAYER_SHOW,
     TOG_CAPS_IND, SLEEP_TIMEOUT_DEC, SLEEP_TIMEOUT_SHOW, SLEEP_TIMEOUT_INC, _______,    _______,    DEBOUNCE_RELEASE_DEC,   DEBOUNCE_RELEASE_SHOW,  DEBOUNCE_RELEASE_INC,   _______,    _______,    _______,    _______,                            KC_HOME,
     MO(5),                  _______,    _______,    RGB_TEST,   _______,    _______,    _______,    MO(6),      RM_SPDD,    RM_SPDU,    _______,    MO(5),                  RM_VALU,    KC_END,
@@ -80,12 +80,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     _______,    _______,    _______,    _______,    _______,    _______,    _______,    KC_LEFT,    KC_DOWN,    KC_RIGHT,   KC_PGDN,    _______,    _______,                            _______,
     _______,                _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,                _______,    _______,
     _______,    _______,    _______,                                        _______,                                        _______,    _______,                  _______,    _______,    _______),
-// layer 8 spare
+// layer 8 QWERTY home row + Space (toggle via TG(8) on layer 4)
 [8] = LAYOUT(
     _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,                _______,
-    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,      _______,     _______,    _______,    _______,    _______,                _______,
-    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,   _______,    _______,    _______,                            _______,
+    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,                _______,
+    _______,    KC_A,       KC_S,       KC_D,       KC_F,       _______,    _______,    KC_J,       KC_K,       KC_L,       KC_SCLN,    _______,    _______,                            _______,
     _______,                _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,    _______,                _______,    _______,
-    _______,    _______,    _______,                                        _______,                                        _______,    _______,                  _______,    _______,    _______),
+    _______,    _______,    _______,                                        KC_SPC,                                         _______,    _______,                  _______,    _______,    _______),
 };
 // clang-format on
