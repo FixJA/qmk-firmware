@@ -835,16 +835,16 @@
             "title": "Toggle Deep Sleep"
         },
         {
-            "name": "TOG POWERON\nANIM",
-            "title": "Toggle Power On Animation"
-        },
-        {
             "name": "TOG BAT\nIND\nNUMERIC",
             "title": "Toggle indicator numeric visual"
         },
         {
             "name": "PRNT\nCFW\nVERSION",
             "title": "Print Custom Firmware Version"
+        },
+        {
+            "name": "TOG POWERON\nANIM",
+            "title": "Toggle Power On Animation"
         }
     ]
 }
