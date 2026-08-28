@@ -144,6 +144,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define CAPS_LOCK_COL 0
 #define NUM_LOCK_ROW 0
 #define NUM_LOCK_COL 14
+#define NUMBER_KEY_ROW 0 // 65% layout: no F-row, digits sit one row higher than the 75%/96% default (1)
 /*
  * END OF DEFAULT VALUES
  */
