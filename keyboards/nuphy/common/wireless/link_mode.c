@@ -1,6 +1,7 @@
 #include "quantum.h"
 #include "../debounce.h"
 #include "../wireless.h"
+#include "rf_driver.h"
 
 enum {
     HOST_USB_TYPE = 0,
@@ -23,6 +24,7 @@ void switch_dev_link(uint8_t mode) {
     if (mode > LINK_USB) return;
 
     break_all_key();
+    clear_report_buffer_and_queue(); // buffered keys must not leak to the new link
 
     dev_info.link_mode = mode;
 

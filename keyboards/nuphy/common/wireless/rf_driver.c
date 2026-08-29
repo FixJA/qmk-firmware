@@ -50,7 +50,8 @@ static void send_or_queue(report_buffer_t *report) {
     if (dev_info.rf_state == RF_CONNECT && rf_queue.is_empty()) {
         uart_send_report(report->cmd, report->buffer, report->length);
         report->repeat++;
-    } else {
+    } else if (report->cmd != CMD_RPT_MS) {
+        // relative mouse motion is useless once replayed late, keep it out of the queue
         rf_queue.enqueue(report);
     }
 }
