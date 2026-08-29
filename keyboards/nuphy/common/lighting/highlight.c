@@ -62,23 +62,25 @@ void nuphy_highlight_custom_keys(uint8_t led_min, uint8_t led_max) {
             } else if (keycode >= SIDE_VAI && keycode <= SIDE_SPD) {
                 rgb_matrix_set_color(index, RGB_YELLOW);
             } else if (keycode >= DEBOUNCE_PRESS_INC && keycode <= DEBOUNCE_PRESS_SHOW) {
-                rgb_matrix_set_color(index, 0, 255, 0);
+                rgb_matrix_set_color(index, RGB_GREEN);
             } else if (keycode >= DEBOUNCE_RELEASE_INC && keycode <= DEBOUNCE_RELEASE_SHOW) {
-                rgb_matrix_set_color(index, 255, 0, 0);
+                rgb_matrix_set_color(index, RGB_RED);
             } else if (keycode == DEV_RESET) {
                 rgb_matrix_set_color(index, RGB_RED);
             } else if (keycode == SLEEP_MODE || keycode == TOG_USB_SLP || keycode == TOG_DEEP_SLEEP || (keycode >= SLEEP_TIMEOUT_INC && keycode <= SLEEP_TIMEOUT_SHOW)) {
                 rgb_matrix_set_color(index, RGB_CYAN);
             } else if (keycode == LAYER_SHOW) {
-                rgb_matrix_set_color(index, RGB_WHITE);
+                rgb_matrix_set_color(index, RGB_TURQUOISE);
             } else if (keycode >= LNK_USB && keycode <= LNK_BLE3) {
                 if (dev_info.link_mode != LINK_USB) {
                     rgb_matrix_set_color(index, RGB_BLUE);
                 }
             } else if (is_media_keycode(keycode)) {
-                rgb_matrix_set_color(index, 225, 65, 140);
+                rgb_matrix_set_color(index, RGB_PINK);
             } else if (nuphy_highlight_custom_key_extra(index, keycode)) {
                 continue;
+            } else if (keycode > KC_TRNS) {
+                rgb_matrix_set_color(index, RGB_PURPLE);
             }
         }
     }
