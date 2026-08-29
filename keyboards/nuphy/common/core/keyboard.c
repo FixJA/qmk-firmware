@@ -648,8 +648,9 @@ bool rgb_matrix_indicators_nuphy(void) {
     os_mode_led_show();
 
     if (f_bat_hold && keyboard_config.custom.battery_indicator_numeric) {
+        // tens cyan, ones white: the same two keys light for e.g. 37% and 73%, so position alone can't disambiguate
         rgb_matrix_set_color(two_digit_decimals_led(dev_info.rf_battery), 0x00, 0x80, 0x80);
-        rgb_matrix_set_color(two_digit_ones_led(dev_info.rf_battery), 0x00, 0x80, 0x80);
+        rgb_matrix_set_color(two_digit_ones_led(dev_info.rf_battery), 0x80, 0x80, 0x80);
     }
 
     sleep_indicator_show();
