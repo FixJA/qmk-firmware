@@ -143,7 +143,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define CAPS_LOCK_ROW 2 // 65% layout: caps sits one row higher than the 75%/96% default (3,0)
 #define CAPS_LOCK_COL 0
 #define NUM_LOCK_ROW 0
-#define NUM_LOCK_COL 14
+#define NUM_LOCK_COL 15 // INS key; col 14 has no key on this 65% matrix and would yield NO_LED
 #define NUMBER_KEY_ROW 0 // 65% layout: no F-row, digits sit one row higher than the 75%/96% default (1)
 /*
  * END OF DEFAULT VALUES

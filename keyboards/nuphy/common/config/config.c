@@ -254,6 +254,7 @@ uint8_t two_digit_decimals_led(uint8_t value) {
 
     uint8_t dec = value / 10;
 
+    // row 0 on purpose: halo75v2 shows the tens digit on the F-row, halo65v2 on its digit row
     uint8_t dec_led_idx = get_led_index(0, dec);
 
     return dec_led_idx;
@@ -263,10 +264,6 @@ uint8_t two_digit_decimals_led(uint8_t value) {
  * @brief get LED if for second digit from double digit number 0 = 0
  */
 uint8_t two_digit_ones_led(uint8_t value) {
-    if (value > 99) {
-        return get_led_index(0, 0);
-    }
-
     uint8_t ones = value % 10;
     if (ones == 0) {
         ones = 10;
