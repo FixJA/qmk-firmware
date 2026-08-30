@@ -10,13 +10,13 @@
 #include "../side.h"
 #include "../ambient.h"
 
-extern uint8_t         f_dev_reset_press;
-extern uint8_t         f_sleep_show;
-extern uint8_t         f_bat_hold;
-extern uint8_t         f_rgb_test_press;
-extern uint8_t         f_debounce_press_show;
-extern uint8_t         f_debounce_release_show;
-extern uint8_t         f_sleep_timeout_show;
+extern bool            f_dev_reset_press;
+extern bool            f_sleep_show;
+extern bool            f_bat_hold;
+extern bool            f_rgb_test_press;
+extern bool            f_debounce_press_show;
+extern bool            f_debounce_release_show;
+extern bool            f_sleep_timeout_show;
 extern bool            f_layer_show;
 extern keymap_config_t keymap_config;
 extern DEV_INFO_STRUCT dev_info;
