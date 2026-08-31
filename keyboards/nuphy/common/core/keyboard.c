@@ -17,6 +17,7 @@ __attribute((weak)) extern void rgb_test_show(void) {}
 
 void switch_dev_link(uint8_t mode);
 void sleep_handle(void);
+void nuphy_led_wake_task(void);
 
 extern DEV_INFO_STRUCT dev_info;
 extern bool            f_wakeup_prepare;
@@ -301,6 +302,8 @@ void housekeeping_task_nuphy(void) {
     side_led_show();
 
     sleep_handle();
+
+    nuphy_led_wake_task();
 }
 
 extern void gpio_init(void);

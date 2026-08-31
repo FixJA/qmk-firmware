@@ -110,6 +110,7 @@ static const pin_t col_pins[MATRIX_COLS] = MATRIX_COL_PINS;
 
 static bool tim6_enabled = false;
 static bool sleeping     = false;
+static bool led_wake_pending = false;
 
 static bool rgb_led_on  = 0;
 static bool side_led_on = 0;
@@ -224,11 +225,13 @@ void exit_deep_sleep(void) {
     gpio_write_pin_high(NRF_WAKEUP_PIN);
 #endif
 
-    led_pwr_wake_handle();
-
     stm32_clock_init();
 
     if (tim6_enabled) TIM_Cmd(TIM6, ENABLE);
+
+    // LED driver re-init is deferred to housekeeping so the wake → first matrix
+    // scan path stays free of the I2C settle waits.
+    led_wake_pending = true;
 
 #if (WORK_MODE == THREE_MODE)
     nuphy_rf_prepare_wakeup();
@@ -253,7 +256,7 @@ void enter_light_sleep(void) {
 void exit_light_sleep(void) {
     sleeping = false;
 
-    led_pwr_wake_handle();
+    led_wake_pending = true;
 #if (WORK_MODE == THREE_MODE)
     nuphy_rf_prepare_wakeup();
 #endif
@@ -291,6 +294,12 @@ void led_pwr_wake_handle(void) {
         pwr_side_led_on();
         side_rgb_refresh();
     }
+}
+
+void nuphy_led_wake_task(void) {
+    if (!led_wake_pending) return;
+    led_wake_pending = false;
+    led_pwr_wake_handle();
 }
 
 void pwr_rgb_led_off(void) {
