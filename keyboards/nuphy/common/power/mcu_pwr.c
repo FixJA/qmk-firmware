@@ -174,7 +174,10 @@ void enter_deep_sleep(void) {
     m_exti.EXTI_Line    = 0XFFFF;
     m_exti.EXTI_LineCmd = ENABLE;
     m_exti.EXTI_Mode    = EXTI_Mode_Interrupt;
-    m_exti.EXTI_Trigger = EXTI_Trigger_Falling;
+    // Deep-sleep pin states: cols driven HIGH, rows pulled DOWN. A key press
+    // pulls its row HIGH (rising edge), release pulls it LOW (falling edge).
+    // Arm both edges so a press wakes the MCU immediately.
+    m_exti.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
     EXTI_Init(&m_exti);
 
     NVIC_InitTypeDef NVIC_InitStructure;
