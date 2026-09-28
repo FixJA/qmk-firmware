@@ -101,7 +101,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #define WIN_LOCK_ROW 0
 #define WIN_LOCK_COL 15
 #define NUM_LOCK_ROW 0
-#define NUM_LOCK_COL 14
+#define NUM_LOCK_COL 15 // row0 is 14:Del / 15:Ins on this board (mirrored vs halo75v2)
 
 #ifndef NUPHY_STRINGIFY_HELPER
 #    define NUPHY_STRINGIFY_HELPER(x) #x
