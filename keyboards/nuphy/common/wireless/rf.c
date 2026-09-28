@@ -801,6 +801,7 @@ void nuphy_rf_set_link(uint8_t mode, uint8_t ack_count, uint8_t delay_ms) {
 }
 
 bool nuphy_rf_request_new_adv(uint8_t retries) {
+    clear_report_buffer_and_queue(); // buffered keys must not leak to the new link
     while (retries--) {
         uart_send_cmd(CMD_NEW_ADV, 0, 1);
         wait_ms(20);
