@@ -321,8 +321,21 @@ void keyboard_post_init_nuphy(void) {
 }
 
 #ifdef RGB_MATRIX_SLEEP
+#ifdef WS2812_SIDE_REFRESH
+// the ws2812 side/logo strip only refreshes from the indicators hook, which
+// stops running while the host is suspended: latch a black frame or the strip
+// holds its last rendered colors through the whole sleep
+extern void set_side_rgb(uint8_t r, uint8_t g, uint8_t b);
+extern void set_logo_rgb(uint8_t r, uint8_t g, uint8_t b);
+#endif
+
 void suspend_power_down_kb(void) {
     rgb_matrix_set_suspend_state(true);
+#ifdef WS2812_SIDE_REFRESH
+    set_side_rgb(0, 0, 0);
+    set_logo_rgb(0, 0, 0);
+    side_rgb_refresh();
+#endif
     suspend_power_down_user();
 }
 
