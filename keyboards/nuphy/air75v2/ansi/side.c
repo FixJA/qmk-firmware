@@ -454,13 +454,14 @@ void bat_percent_led(uint8_t bat_percent) {
     }
 }
 
+// hoisted from bat_led_show so nuphy_bat_display_active can read it
+static bool bat_show_flag = true;
+
 /**
  * @brief  bat_led_show.
  */
 
 void bat_led_show(void) {
-    static bool bat_show_flag = true;
-
     static uint32_t bat_show_time    = 0;
     static uint32_t bat_sts_debounce = 0;
     static uint32_t bat_per_debounce = 0;
@@ -535,6 +536,11 @@ void bat_led_show(void) {
     if (f_bat_hold || bat_show_flag) {
         bat_percent_led(bat_percent);
     }
+}
+
+// the link/wireless indicator yields while the battery display owns the side LEDs
+bool nuphy_bat_display_active(void) {
+    return f_bat_hold || bat_show_flag;
 }
 
 /**

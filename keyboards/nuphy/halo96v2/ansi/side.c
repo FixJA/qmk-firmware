@@ -891,6 +891,11 @@ void bat_led_show(void) {
     }
 }
 
+// the link/wireless indicator yields while the battery display owns the side LEDs
+bool nuphy_bat_display_active(void) {
+    return f_bat_hold || battery_show_flag;
+}
+
 /**
  * @brief  device_reset_show.
  */
