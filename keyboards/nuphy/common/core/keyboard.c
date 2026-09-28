@@ -316,7 +316,8 @@ void keyboard_post_init_nuphy(void) {
     break_all_key();
     dial_sw_fast_scan();
     load_eeprom_data();
-    keyboard_post_init_user();
+    // keyboard_post_init_user() is invoked by each keyboard's
+    // keyboard_post_init_kb wrapper, per QMK convention
 }
 
 #ifdef RGB_MATRIX_SLEEP
