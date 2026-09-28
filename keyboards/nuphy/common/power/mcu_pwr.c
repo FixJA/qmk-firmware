@@ -209,6 +209,12 @@ void enter_deep_sleep(void) {
 }
 
 void exit_deep_sleep(void) {
+    // restore the 48MHz PLL first: STOP-mode exit leaves the core on the 8MHz
+    // HSI, and led_pwr_wake_handle bit-bangs ws2812 with CPU_CLOCK-derived timing
+    stm32_clock_init();
+
+    if (tim6_enabled) TIM_Cmd(TIM6, ENABLE);
+
     nuphy_matrix_wake_init();
 
 #if (WORK_MODE == THREE_MODE)
@@ -222,10 +228,6 @@ void exit_deep_sleep(void) {
 #endif
 
     led_pwr_wake_handle();
-
-    stm32_clock_init();
-
-    if (tim6_enabled) TIM_Cmd(TIM6, ENABLE);
 
 #if (WORK_MODE == THREE_MODE)
     nuphy_rf_prepare_wakeup();
