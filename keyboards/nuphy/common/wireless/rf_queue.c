@@ -20,8 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Be mindful of queue size!! The MCU only has 16kb memory... This alone will be over 1kb.
 #define RF_QUEUE_SIZE 64
 
-static uint8_t queue_head = 0;
-static uint8_t queue_tail = 0;
+static uint8_t  queue_head = 0;
+static uint8_t  queue_tail = 0;
+static uint32_t batch_birth_time = 0; // enqueue time of the oldest buffered report
 
 static report_buffer_t buffer_queue[RF_QUEUE_SIZE] = {0};
 
@@ -30,15 +31,17 @@ static bool rf_queue_is_empty(void) {
 }
 
 static void clear_rf_queue(void) {
-    queue_head = 0;
-    queue_tail = 0;
+    queue_head       = 0;
+    queue_tail       = 0;
+    batch_birth_time = 0;
 }
 
 static bool enqueue_rf_report(report_buffer_t *report) {
     uint8_t next = (queue_head + 1) % RF_QUEUE_SIZE;
-    if (next == queue_tail) { // queue is full.
-        return false;
+    if (next == queue_tail) { // queue is full: drop the oldest, the newest state must always land
+        queue_tail = (queue_tail + 1) % RF_QUEUE_SIZE;
     }
+    if (rf_queue_is_empty()) batch_birth_time = timer_read32(); // on overflow the older timestamp is kept on purpose
     buffer_queue[queue_head] = *report;
     queue_head               = next;
     return true;
@@ -53,9 +56,15 @@ static bool dequeue_rf_report(report_buffer_t *report) {
     return true;
 }
 
+static uint32_t rf_queue_age(void) {
+    if (rf_queue_is_empty()) return 0;
+    return timer_elapsed32(batch_birth_time);
+}
+
 const rf_queue_t rf_queue = {
     .enqueue  = enqueue_rf_report,
     .dequeue  = dequeue_rf_report,
     .is_empty = rf_queue_is_empty,
     .clear    = clear_rf_queue,
+    .age      = rf_queue_age,
 };

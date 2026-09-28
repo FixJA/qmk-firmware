@@ -152,7 +152,7 @@ void uart_send_repeat_from_queue(void) {
     static uint32_t        repeat_timer  = 0;
     static report_buffer_t report_buff   = {0};
     static bool            do_repeat     = true;
-    if (timer_elapsed32(dequeue_timer) > 25 && !rf_queue.is_empty()) {
+    if (timer_elapsed32(dequeue_timer) > RF_REPLAY_DEQUEUE_MS && !rf_queue.is_empty()) {
         rf_queue.dequeue(&report_buff);
         dequeue_timer = timer_read32();
         // Repeat only keyboard reports. Extra reports actually repeat the keys.
@@ -180,8 +180,9 @@ void uart_send_report_repeat(void) {
     if (dev_info.link_mode == LINK_USB) return;
 
     if (dev_info.rf_state != RF_CONNECT) {
-        // toss away queue after some time if disconnected to prevent sending random keys
-        if (no_act_time > 100) clear_report_buffer_and_queue(); // 1 second
+        // toss away the queue once it has been buffered too long, so stale keys
+        // (e.g. keys pressed in a bag) never replay after a late reconnect
+        if (rf_queue.age() > RF_BUFFER_MAX_AGE_MS) clear_report_buffer_and_queue();
         return;
     }
 
@@ -720,6 +721,7 @@ void nuphy_rf_enter_dfu(void) {
 }
 
 void nuphy_rf_set_link(uint8_t mode, uint8_t ack_count, uint8_t delay_ms) {
+    clear_report_buffer_and_queue(); // buffered keys must not leak to the new link
     dev_info.link_mode = mode;
     if (mode != LINK_USB) {
         dev_info.rf_channel  = mode;

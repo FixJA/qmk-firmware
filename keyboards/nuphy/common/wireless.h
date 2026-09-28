@@ -8,6 +8,12 @@
 #define LINK_TIMEOUT_ALT (100 * 5)
 #define POWER_DOWN_DELAY (24)
 
+// Disconnect buffer replay: drop the whole queue once it has been waiting
+// longer than this (guards against stale keys replaying after long gaps).
+#define RF_BUFFER_MAX_AGE_MS 10000
+// Interval between dequeued reports while replaying the queue after reconnect.
+#define RF_REPLAY_DEQUEUE_MS 4
+
 #define LINK_RF_24 0
 #define LINK_BT_1 1
 #define LINK_BT_2 2

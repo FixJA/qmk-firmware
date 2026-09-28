@@ -31,4 +31,5 @@ typedef struct {
     bool (*dequeue)(report_buffer_t *report);
     bool (*is_empty)(void);
     void (*clear)(void);
+    uint32_t (*age)(void); // ms since the oldest buffered report was enqueued, 0 when empty
 } rf_queue_t;
