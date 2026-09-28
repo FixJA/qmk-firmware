@@ -17,6 +17,7 @@ extern uint8_t         f_rgb_test_press;
 extern uint8_t         f_debounce_press_show;
 extern uint8_t         f_debounce_release_show;
 extern uint8_t         f_sleep_timeout_show;
+extern bool            f_layer_show;
 extern keymap_config_t keymap_config;
 extern DEV_INFO_STRUCT dev_info;
 extern bool            f_rf_sw_press;
@@ -370,6 +371,11 @@ bool process_record_nuphy(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 keyboard_config.common.power_on_animation = !keyboard_config.common.power_on_animation;
                 save_config_to_eeprom();
+            }
+            return false;
+        case LAYER_SHOW:
+            if (record->event.pressed) {
+                f_layer_show = !f_layer_show;
             }
             return false;
     }
