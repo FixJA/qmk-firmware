@@ -359,6 +359,9 @@ void bat_charging_design(uint8_t init, uint8_t r, uint8_t g, uint8_t b) {
     static uint16_t show_mask      = 0x00;
     static bool     f_move_trend   = 0;
     uint16_t        bit_mask       = 1;
+    // drain stops on the charge level, matching the non-charging bar (LEDs 0..bat_end_led);
+    // the 0x1f >> (SIDE_LINE - init) form was copied from the 5-LED halo65_v2
+    const uint16_t level_mask = (1 << (init + 1)) - 1;
     uint8_t         i;
 
     if (timer_elapsed32(interval_timer) > 100) {
@@ -366,7 +369,7 @@ void bat_charging_design(uint8_t init, uint8_t r, uint8_t g, uint8_t b) {
 
         if (f_move_trend) {
             show_mask >>= 1;
-            if (show_mask == 0x1f >> (SIDE_LINE - init)) f_move_trend = 0;
+            if (show_mask == level_mask) f_move_trend = 0;
         } else {
             show_mask <<= 1;
             show_mask |= 1;
