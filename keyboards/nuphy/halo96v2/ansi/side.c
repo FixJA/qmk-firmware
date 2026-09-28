@@ -963,6 +963,12 @@ static void side_power_mode_show(void) {
         power_play_index++;
     }
 
+    // advance the rainbow base once per frame and step it per LED, matching
+    // the runtime spectrum effect; nothing else advances side_play_point
+    // while the boot animation owns side_led_show
+    light_point_playing(0, 1, FLOW_COLOR_TAB_LEN, &side_play_point);
+    uint8_t rainbow_index = side_play_point;
+
     uint8_t i;
 
     for (i = 0; i < HALO_LED_COUNT; i++) {
@@ -973,9 +979,10 @@ static void side_power_mode_show(void) {
             g_temp = dual_side_color_lib[color][1];
             b_temp = dual_side_color_lib[color][2];
         } else if (keyboard_config.lights.side_mode == SIDE_MIX) {
-            r_temp = flow_rainbow_color_tab[side_play_point % FLOW_COLOR_TAB_LEN][0];
-            g_temp = flow_rainbow_color_tab[side_play_point % FLOW_COLOR_TAB_LEN][1];
-            b_temp = flow_rainbow_color_tab[side_play_point % FLOW_COLOR_TAB_LEN][2];
+            r_temp = flow_rainbow_color_tab[rainbow_index][0];
+            g_temp = flow_rainbow_color_tab[rainbow_index][1];
+            b_temp = flow_rainbow_color_tab[rainbow_index][2];
+            light_point_playing(1, 4, FLOW_COLOR_TAB_LEN, &rainbow_index);
         } else {
             rgb_t rgb = nuphy_picker_hsv_rgb(keyboard_config.lights.side_static_color.hue, keyboard_config.lights.side_static_color.sat, 255);
 

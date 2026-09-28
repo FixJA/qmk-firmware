@@ -1080,11 +1080,18 @@ static void side_power_mode_show(void) {
         power_play_index++;
     }
 
+    // advance the rainbow base once per frame and step it per LED, matching
+    // the runtime wave-rainbow effect; nothing else advances side_play_point
+    // while the boot animation owns side_led_show
+    light_point_playing(0, 1, FLOW_COLOR_TAB_LEN, &side_play_point);
+    uint8_t rainbow_index = side_play_point;
+
     for (uint8_t i = 0; i < HALO_LED_COUNT; i++) {
         if (keyboard_config.lights.side_mode == SIDE_MIX || (keyboard_config.lights.side_mode == SIDE_WAVE && keyboard_config.lights.side_color == 2)) { // Mix and Wave's rainbow variant share the rainbow fill
-            r_temp = flow_rainbow_color_tab[side_play_point % FLOW_COLOR_TAB_LEN][0];
-            g_temp = flow_rainbow_color_tab[side_play_point % FLOW_COLOR_TAB_LEN][1];
-            b_temp = flow_rainbow_color_tab[side_play_point % FLOW_COLOR_TAB_LEN][2];
+            r_temp = flow_rainbow_color_tab[rainbow_index][0];
+            g_temp = flow_rainbow_color_tab[rainbow_index][1];
+            b_temp = flow_rainbow_color_tab[rainbow_index][2];
+            light_point_playing(1, 4, FLOW_COLOR_TAB_LEN, &rainbow_index);
         } else if (keyboard_config.lights.side_mode == SIDE_NEW) {
             uint8_t color = keyboard_config.lights.side_color % 3;
 
