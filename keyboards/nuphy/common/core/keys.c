@@ -393,17 +393,17 @@ void break_all_key(void) {
     clear_mods();
     clear_keyboard();
 
-    // break nkro key
+    // break nkro key; the two zero reports need no deliberate gap:
+    // uart_send_bytes already spaces consecutive frames by >= 1ms
+    // (factory code waited 10ms twice here)
     keymap_config.nkro = 1;
     memset(nkro_report, 0, sizeof(report_nkro_t));
     host_nkro_send(nkro_report);
-    wait_ms(10);
 
     // break byte key
     keymap_config.nkro = 0;
     memset(keyboard_report, 0, sizeof(report_keyboard_t));
     host_keyboard_send(keyboard_report);
-    wait_ms(10);
 
     keymap_config.nkro = nkro_temp;
 

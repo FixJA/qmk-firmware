@@ -64,6 +64,13 @@ uint8_t  sync_lost        = 0;
 uint8_t  disconnect_delay = 0;
 uint32_t uart_rpt_timer   = 0;
 
+// Non-blocking nRF reset for dev_sts_sync: QUIET (let the bus settle) ->
+// PULSE_LOW (reset line low) -> SETTLE (nRF reboots). Same 100/50/50ms timing
+// as the original blocking sequence, advanced one step per housekeeping tick.
+typedef enum { RF_RESET_IDLE, RF_RESET_QUIET, RF_RESET_PULSE_LOW, RF_RESET_SETTLE } rf_reset_stage_t;
+static rf_reset_stage_t rf_reset_stage = RF_RESET_IDLE;
+static uint32_t         rf_reset_timer = 0;
+
 report_buffer_t report_buff_a = {0};
 report_buffer_t report_buff_b = {0};
 
@@ -152,11 +159,13 @@ void uart_send_repeat_from_queue(void) {
     static uint32_t        repeat_timer  = 0;
     static report_buffer_t report_buff   = {0};
     static bool            do_repeat     = true;
+    static bool            fresh         = false;
     if (timer_elapsed32(dequeue_timer) > RF_REPLAY_DEQUEUE_MS && !rf_queue.is_empty()) {
         rf_queue.dequeue(&report_buff);
         dequeue_timer = timer_read32();
         // Repeat only keyboard reports. Extra reports actually repeat the keys.
         do_repeat = (report_buff.cmd == CMD_RPT_BYTE_KB || report_buff.cmd == CMD_RPT_BIT_KB);
+        fresh     = true;
     }
 
     // queue is empty, continue sending from standard process.
@@ -165,9 +174,13 @@ void uart_send_repeat_from_queue(void) {
         if (do_repeat) report_buff_a = report_buff;
     }
 
-    if (report_buff.repeat == 0 || (do_repeat && timer_elapsed32(repeat_timer) > 3)) {
+    // fresh gates the first send of each dequeued report. The factory version
+    // keyed this on report_buff.repeat, but its increment was disabled, so the
+    // condition held forever and every loop re-sent through the blocking
+    // uart_send_bytes chain (~1ms per housekeeping tick).
+    if (fresh || (do_repeat && timer_elapsed32(repeat_timer) > 3)) {
         uart_send_report(report_buff.cmd, report_buff.buffer, report_buff.length);
-        // report_buff.repeat++; // NOTE: probably cause of non sleeping on conn timeout
+        fresh        = false;
         repeat_timer = timer_read32();
     }
 }
@@ -478,17 +491,42 @@ void dev_sts_sync(void) {
     static uint32_t interval_timer  = 0;
     static uint8_t  link_state_temp = RF_DISCONNECT;
 
+    // accept a reset request and advance the sequence before the 200ms gate,
+    // so a reset no longer stalls the whole main loop for 200ms
+    if (f_rf_reset && rf_reset_stage == RF_RESET_IDLE) {
+        f_rf_reset     = 0;
+        rf_reset_stage = RF_RESET_QUIET;
+        rf_reset_timer = timer_read32();
+    }
+    switch (rf_reset_stage) {
+        case RF_RESET_QUIET:
+            if (timer_elapsed32(rf_reset_timer) >= 100) {
+                gpio_write_pin_low(NRF_RESET_PIN);
+                rf_reset_stage = RF_RESET_PULSE_LOW;
+                rf_reset_timer = timer_read32();
+            }
+            return; // nRF is resetting: no link work until it settles
+        case RF_RESET_PULSE_LOW:
+            if (timer_elapsed32(rf_reset_timer) >= 50) {
+                gpio_write_pin_high(NRF_RESET_PIN);
+                rf_reset_stage = RF_RESET_SETTLE;
+                rf_reset_timer = timer_read32();
+            }
+            return;
+        case RF_RESET_SETTLE:
+            if (timer_elapsed32(rf_reset_timer) >= 50) {
+                rf_reset_stage = RF_RESET_IDLE;
+            }
+            return;
+        case RF_RESET_IDLE:
+        default:
+            break;
+    }
+
     if (timer_elapsed32(interval_timer) < 200) return;
     interval_timer = timer_read32();
 
-    if (f_rf_reset) {
-        f_rf_reset = 0;
-        wait_ms(100);
-        gpio_write_pin_low(NRF_RESET_PIN);
-        wait_ms(50);
-        gpio_write_pin_high(NRF_RESET_PIN);
-        wait_ms(50);
-    } else if (f_send_channel) {
+    if (f_send_channel) {
         f_send_channel = 0;
         uart_send_cmd(CMD_SET_LINK, 10, 10);
     }
@@ -527,7 +565,9 @@ void dev_sts_sync(void) {
         }
     }
 
-    uart_send_cmd(CMD_RF_STS_SYSC, 1, 0);
+    // response comes back through rf_protocol_receive on a later tick;
+    // waiting for it here just burned 1ms per sync
+    uart_send_cmd(CMD_RF_STS_SYSC, 0, 0);
 
     /* reset report repeat timer, might reduce repeat keys? */
     uart_rpt_timer = timer_read32();
@@ -537,6 +577,36 @@ void dev_sts_sync(void) {
             sync_lost  = 0;
             f_rf_reset = 1;
         }
+    }
+}
+
+/**
+ * @brief Finish an in-flight nRF reset sequence with blocking waits.
+ * @note  Must run before deep sleep: the MCU pauses in WFI, so a reset pulse
+ *        left mid-stage would hold the nRF in reset until the next wake.
+ */
+void nuphy_rf_reset_flush(void) {
+    while (rf_reset_stage != RF_RESET_IDLE) {
+        uint32_t elapsed = timer_elapsed32(rf_reset_timer);
+        switch (rf_reset_stage) {
+            case RF_RESET_QUIET:
+                if (elapsed < 100) wait_ms(100 - elapsed);
+                gpio_write_pin_low(NRF_RESET_PIN);
+                rf_reset_stage = RF_RESET_PULSE_LOW;
+                break;
+            case RF_RESET_PULSE_LOW:
+                if (elapsed < 50) wait_ms(50 - elapsed);
+                gpio_write_pin_high(NRF_RESET_PIN);
+                rf_reset_stage = RF_RESET_SETTLE;
+                break;
+            case RF_RESET_SETTLE:
+                if (elapsed < 50) wait_ms(50 - elapsed);
+                rf_reset_stage = RF_RESET_IDLE;
+                break;
+            default:
+                return;
+        }
+        rf_reset_timer = timer_read32();
     }
 }
 

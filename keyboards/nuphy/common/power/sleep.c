@@ -31,6 +31,10 @@ extern bool            f_goto_sleep;
 extern bool            f_wakeup_prepare;
 
 void deep_sleep_handle(void) {
+    // the MCU pauses in deep sleep, so an in-flight nRF reset must be
+    // finished first or the reset line stays low through the whole sleep
+    nuphy_rf_reset_flush();
+
     // Sync again before sleeping. Without this, the wake keystroke is more likely to be lost.
     nuphy_rf_sync_status();
 

@@ -49,6 +49,7 @@ typedef struct {
 extern DEV_INFO_STRUCT dev_info;
 
 void nuphy_rf_sync_status(void);
+void nuphy_rf_reset_flush(void);
 void nuphy_rf_transport_init(void);
 void nuphy_rf_device_init(void);
 void nuphy_rf_repeat_reports(void);
