@@ -31,9 +31,10 @@ extern void exit_light_sleep(void);
 
 bool pre_process_record_kb(uint16_t keycode, keyrecord_t *record) {
     // wakeup check for light sleep/no sleep - fire this immediately to not lose wake keys.
+    // unconditional: sleep_toggle may have been cleared via VIA after light sleep was entered
     if (f_wakeup_prepare) {
         f_wakeup_prepare = 0;
-        if (keyboard_config.common.sleep_toggle) exit_light_sleep();
+        exit_light_sleep();
     }
 
     return pre_process_record_user(keycode, record);
