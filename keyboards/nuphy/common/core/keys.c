@@ -269,9 +269,8 @@ bool process_record_nuphy(uint16_t keycode, keyrecord_t *record) {
                 keymap_config.no_gui = !keymap_config.no_gui;
                 eeconfig_update_keymap(&keymap_config);
                 break_all_key();
-            } else
-                unregister_code16(keycode);
-            break;
+            }
+            return false;
 
         case RGB_TEST:
             f_rgb_test_press = record->event.pressed;
