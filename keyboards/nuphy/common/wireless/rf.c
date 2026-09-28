@@ -237,6 +237,12 @@ void rf_protocol_receive(void) {
             Usart_Mgr.RXDState = RX_DATA_ERR;
             return;
         } else if (Usart_Mgr.RXDLen > 4) {
+            // the declared payload and its checksum must be fully received,
+            // else the parser reads stale bytes from the previous frame
+            if (Usart_Mgr.RXDLen < RX_LEN + 5) {
+                Usart_Mgr.RXDState = RX_DATA_ERR;
+                return;
+            }
             for (i = 0; i < RX_LEN; i++)
                 check_sum += Usart_Mgr.RXDBuf[4 + i];
 
@@ -248,6 +254,9 @@ void rf_protocol_receive(void) {
             if (Usart_Mgr.RXDBuf[2] == 0xA0) { // Only some commands send an ACK.
                 f_uart_ack = 1;
             }
+        } else { // 1/2/4-byte fragments: header fields past the received bytes are stale
+            Usart_Mgr.RXDState = RX_DATA_ERR;
+            return;
         }
 
         Usart_Mgr.RXCmd = RX_CMD;
@@ -270,6 +279,11 @@ void rf_protocol_receive(void) {
 
             case CMD_RF_STS_SYSC: {
                 static uint8_t error_cnt = 0;
+
+                if (RX_LEN < 5) { // fixed payload: link_mode, rf_state, led, charge, battery
+                    Usart_Mgr.RXDState = RX_DATA_ERR;
+                    return;
+                }
 
                 if (dev_info.link_mode == Usart_Mgr.RXDBuf[4]) {
                     error_cnt = 0;
@@ -305,6 +319,11 @@ void rf_protocol_receive(void) {
             }
 
             case CMD_READ_DATA: {
+                if (RX_LEN < FUNC_VALID_LEN) { // the request asks for 32 bytes; a shorter payload would memcpy stale bytes into dev_info
+                    Usart_Mgr.RXDState = RX_DATA_ERR;
+                    return;
+                }
+
                 memcpy(func_tab, &Usart_Mgr.RXDBuf[4], 32);
 
                 if (func_tab[4] <= LINK_USB) {
