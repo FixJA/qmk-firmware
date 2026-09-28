@@ -290,6 +290,18 @@ enum NonMatrixEffects {
     EFFECT_OFF,
 } non_matrix_effects;
 
+// VIA hosts can send any byte; stored side/ambient values feed fixed-size
+// tables (side_speed_table[5][5], side_light_table[6]) and must stay bounded
+#ifndef NUPHY_LIGHT_MODE_MAX
+#    define NUPHY_LIGHT_MODE_MAX EFFECT_OFF
+#endif
+#ifndef NUPHY_LIGHT_SPEED_MAX
+#    define NUPHY_LIGHT_SPEED_MAX 4
+#endif
+#ifndef NUPHY_LIGHT_BRIGHTNESS_MAX
+#    define NUPHY_LIGHT_BRIGHTNESS_MAX 5
+#endif
+
 void     custom_eeprom_init(void);
 void     init_keyboard_config(void);
 void     save_config_to_eeprom(void);

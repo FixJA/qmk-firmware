@@ -14,38 +14,40 @@ __attribute__((weak)) void via_config_set_value(uint8_t *data) {
 
     switch (*value_id) {
         case id_usb_sleep_toggle:
-            keyboard_config.common.usb_sleep_toggle = *value_data;
+            keyboard_config.common.usb_sleep_toggle = !!(*value_data);
             break;
         case id_deep_sleep_toggle:
-            keyboard_config.common.deep_sleep_toggle = *value_data;
+            keyboard_config.common.deep_sleep_toggle = !!(*value_data);
             break;
         case id_debounce_press:
-            keyboard_config.common.debounce_press_ms = *value_data;
+            keyboard_config.common.debounce_press_ms = MIN(*value_data, 99); // 7-bit field in the debounce counters
             break;
         case id_debounce_release:
-            keyboard_config.common.debounce_release_ms = *value_data;
+            keyboard_config.common.debounce_release_ms = MIN(*value_data, 99);
             break;
-        case id_sleep_timeout:
-            keyboard_config.common.sleep_timeout = *value_data + 1;
+        case id_sleep_timeout: {
+            uint8_t minutes = MIN(*value_data, 59); // stored as 1-60 minutes, matching adjust_sleep_timeout
+            keyboard_config.common.sleep_timeout    = minutes + 1;
             break;
+        }
         case id_caps_indicator_type:
-            keyboard_config.common.caps_indicator_type = *value_data;
+            keyboard_config.common.caps_indicator_type = MIN(*value_data, CAPS_INDICATOR_OFF);
             break;
         case id_sleep_toggle:
-            keyboard_config.common.sleep_toggle = *value_data;
+            keyboard_config.common.sleep_toggle = !!(*value_data);
             break;
 
         case id_side_light_mode:
-            keyboard_config.lights.side_mode = *value_data;
+            keyboard_config.lights.side_mode = MIN(*value_data, NUPHY_LIGHT_MODE_MAX);
             break;
         case id_side_light_speed:
-            keyboard_config.lights.side_speed = *value_data;
+            keyboard_config.lights.side_speed = MIN(*value_data, NUPHY_LIGHT_SPEED_MAX);
             break;
         case id_side_light_color:
             keyboard_config.lights.side_color = *value_data;
             break;
         case id_side_light_brightness:
-            keyboard_config.lights.side_brightness = *value_data;
+            keyboard_config.lights.side_brightness = MIN(*value_data, NUPHY_LIGHT_BRIGHTNESS_MAX);
             break;
         case id_side_light_static_color:
             keyboard_config.lights.side_static_color.hue = value_data[0];
@@ -53,35 +55,35 @@ __attribute__((weak)) void via_config_set_value(uint8_t *data) {
             break;
 
         case id_ambient_light_mode:
-            keyboard_config.lights.ambient_mode = *value_data;
+            keyboard_config.lights.ambient_mode = MIN(*value_data, NUPHY_LIGHT_MODE_MAX);
             break;
         case id_ambient_light_speed:
-            keyboard_config.lights.ambient_speed = *value_data;
+            keyboard_config.lights.ambient_speed = MIN(*value_data, NUPHY_LIGHT_SPEED_MAX);
             break;
         case id_ambient_light_color:
             keyboard_config.lights.ambient_color = *value_data;
             break;
         case id_ambient_light_brightness:
-            keyboard_config.lights.ambient_brightness = *value_data;
+            keyboard_config.lights.ambient_brightness = MIN(*value_data, NUPHY_LIGHT_BRIGHTNESS_MAX);
             break;
         case id_ambient_light_static_color:
             keyboard_config.lights.ambient_static_color.hue = value_data[0];
             keyboard_config.lights.ambient_static_color.sat = value_data[1];
             break;
         case id_battery_indicator_brightness:
-            keyboard_config.custom.battery_indicator_brightness = *value_data;
+            keyboard_config.custom.battery_indicator_brightness = MIN(*value_data, 100); // percent: consumers scale with /100 back into uint8_t
             break;
         case id_toggle_custom_keys_highlight:
-            keyboard_config.custom.toggle_custom_keys_highlight = *value_data;
+            keyboard_config.custom.toggle_custom_keys_highlight = !!(*value_data);
             break;
         case id_toggle_detect_numlock_state:
-            keyboard_config.custom.detect_numlock_state = *value_data;
+            keyboard_config.custom.detect_numlock_state = !!(*value_data);
             break;
         case id_battery_indicator_numeric:
-            keyboard_config.custom.battery_indicator_numeric = *value_data;
+            keyboard_config.custom.battery_indicator_numeric = !!(*value_data);
             break;
         case id_power_on_animation:
-            keyboard_config.common.power_on_animation = *value_data;
+            keyboard_config.common.power_on_animation = !!(*value_data);
             break;
     }
 }
@@ -103,7 +105,7 @@ __attribute__((weak)) void via_config_get_value(uint8_t *data) {
             *value_data = keyboard_config.common.debounce_release_ms;
             break;
         case id_sleep_timeout:
-            *value_data = keyboard_config.common.sleep_timeout - 1;
+            *value_data = keyboard_config.common.sleep_timeout ? keyboard_config.common.sleep_timeout - 1 : 0;
             break;
         case id_caps_indicator_type:
             *value_data = keyboard_config.common.caps_indicator_type;
