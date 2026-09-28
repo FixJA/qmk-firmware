@@ -178,6 +178,10 @@
 #    define CAPS_LOCK_COL 0
 #endif
 
+#ifndef NUMBER_KEY_ROW // matrix row of the digit keys 1-9,0, used for on-key numeric indicators
+#    define NUMBER_KEY_ROW 1
+#endif
+
 #ifndef NUPHY_CONFIG_INIT_MAGIC
 #    define NUPHY_CONFIG_INIT_MAGIC 0x46
 #endif

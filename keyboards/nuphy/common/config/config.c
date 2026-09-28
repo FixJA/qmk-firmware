@@ -271,7 +271,7 @@ uint8_t two_digit_ones_led(uint8_t value) {
     if (ones == 0) {
         ones = 10;
     }
-    uint8_t ones_led_idx = get_led_index(1, ones);
+    uint8_t ones_led_idx = get_led_index(NUMBER_KEY_ROW, ones);
 
     return ones_led_idx;
 }

@@ -73,6 +73,10 @@ static const uint8_t power_led_index_tab[HALO_LED_COUNT] = {
 
 bool     f_charging        = true;
 bool     f_bat_displaying  = false;
+bool     f_bat_anim_finishing = false;
+
+// hoisted from bat_led_show so bat_charging_design can end the display window
+static bool bat_show_flag = true;
 uint8_t  side_play_point   = 0;
 uint16_t side_play_cnt     = 0;
 uint32_t led_play_timer    = 0;
@@ -772,26 +776,40 @@ void bat_charging_breathe(void) {
     set_side_rgb(r_temp, g_temp, b_temp);
 }
 
+#define BAT_CHARGING_REST_TICKS 3 // hold on the charge level ~300ms each cycle
+
 void bat_charging_design(uint8_t init, uint8_t r, uint8_t g, uint8_t b) {
     static uint32_t interval_timer = 0;
     static uint16_t show_mask      = 0x00;
     static bool     f_move_trend   = false;
+    static uint8_t  rest_ticks     = 0;
     uint16_t        bit_mask       = 1;
+    const uint16_t  level_mask     = (1 << (init + 1)) - 1;
 
     if (timer_elapsed32(interval_timer) > 100) {
         interval_timer = timer_read32();
 
+        // cycle: empty -> grow to the charge level -> brief hold -> drain to empty
         if (f_move_trend) {
             show_mask >>= 1;
-            if (show_mask == (0x1F >> (SIDE_LED_COUNT - init))) {
+            if (show_mask == 0x00) {
                 f_move_trend = false;
+
+                if (f_bat_anim_finishing) {
+                    // window expired: vanish only now that the cycle is complete
+                    f_bat_anim_finishing = false;
+                    bat_show_flag        = false;
+                    f_charging           = false;
+                }
             }
-        } else {
+        } else if (rest_ticks) {
+            rest_ticks--;
+        } else if (show_mask < level_mask) {
             show_mask <<= 1;
             show_mask |= 1;
-            if (show_mask == 0x7F) {
-                f_move_trend = true;
-            }
+        } else {
+            rest_ticks   = BAT_CHARGING_REST_TICKS;
+            f_move_trend = true;
         }
     }
 
@@ -851,9 +869,9 @@ void bat_percent_led(uint8_t bat_percent) {
         bat_b       = side_color_lib[2][2];
     } else if (bat_percent <= 80) {
         bat_end_led = 3;
-        bat_r       = side_color_lib[4][0];
-        bat_g       = side_color_lib[4][1];
-        bat_b       = side_color_lib[4][2];
+        bat_r       = side_color_lib[3][0];
+        bat_g       = side_color_lib[3][1];
+        bat_b       = side_color_lib[3][2];
     } else {
         bat_end_led = 4;
         bat_r       = side_color_lib[3][0];
@@ -865,6 +883,12 @@ void bat_percent_led(uint8_t bat_percent) {
     bat_g = bat_g * keyboard_config.custom.battery_indicator_brightness / 100;
     bat_b = bat_b * keyboard_config.custom.battery_indicator_brightness / 100;
 
+    // quarter brightness like factory halo75_v2; applied to both the charging sweep and
+    // the static bar so plug/unplug displays match
+    bat_r >>= 2;
+    bat_g >>= 2;
+    bat_b >>= 2;
+
     if (f_charging) {
         low_bat_blink_cnt = 6;
 #if (CHARGING_SHIFT)
@@ -875,10 +899,16 @@ void bat_percent_led(uint8_t bat_percent) {
     } else if (bat_percent < 10) {
         low_bat_show();
     } else {
+        uint8_t full_leds = bat_percent / 20;
+        uint8_t frac      = (bat_percent % 20) * 255 / 20;
+
         low_bat_blink_cnt = 6;
         for (uint8_t i = 0; i < SIDE_LED_COUNT; i++) {
-            if (i <= bat_end_led) {
+            if (i < full_leds) {
                 set_side_led_color(i, bat_r, bat_g, bat_b);
+            } else if (i == full_leds && frac) {
+                // boundary segment scales with the remainder within the tier
+                set_side_led_color(i, (bat_r * frac) >> 8, (bat_g * frac) >> 8, (bat_b * frac) >> 8);
             } else {
                 set_side_led_color(i, 0x00, 0x00, 0x00);
             }
@@ -887,7 +917,6 @@ void bat_percent_led(uint8_t bat_percent) {
 }
 
 void bat_led_show(void) {
-    static bool     bat_show_flag    = true;
     static uint32_t bat_show_time    = 0;
     static uint32_t bat_sts_debounce = 0;
     static uint32_t bat_per_debounce = 0;
@@ -921,9 +950,16 @@ void bat_led_show(void) {
     if (charge_state != dev_info.rf_charge) {
         if (timer_elapsed32(bat_sts_debounce) > 1000) {
             if (((charge_state & 0x01) == 0) && ((dev_info.rf_charge & 0x01) != 0)) {
-                bat_show_flag = true;
-                f_charging    = true;
-                bat_show_time = timer_read32();
+                bat_show_flag        = true;
+                f_charging           = true;
+                f_bat_anim_finishing = false;
+                bat_show_time        = timer_read32();
+            } else if (((charge_state & 0x01) != 0) && ((dev_info.rf_charge & 0x01) == 0)) {
+                // unplugged: show the remaining charge as a static bar
+                bat_show_flag        = true;
+                f_charging           = false;
+                f_bat_anim_finishing = false;
+                bat_show_time        = timer_read32();
             }
             charge_state = dev_info.rf_charge;
         }
@@ -932,8 +968,8 @@ void bat_led_show(void) {
 
         if (f_charging) {
             if (timer_elapsed32(bat_show_time) > 10000) {
-                bat_show_flag = false;
-                f_charging    = false;
+                // let the running charge animation finish its cycle before vanishing
+                f_bat_anim_finishing = true;
             }
         } else if (timer_elapsed32(bat_show_time) > 5000) {
             bat_show_flag = false;
