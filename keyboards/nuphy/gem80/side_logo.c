@@ -15,6 +15,20 @@ extern const uint8_t side_color_lib[9][3];
 extern uint8_t       r_temp, g_temp, b_temp;
 extern void          side_rgb_set_color(int index, uint8_t red, uint8_t green, uint8_t blue);
 
+// side_speed_table is [5][5] and side_light_table is [6]; stored values can
+// hold any byte from a stale EEPROM or an unclamped host write
+static uint8_t clamp_light_mode(uint8_t mode) {
+    return mode > SIDE_OFF ? SIDE_OFF : mode;
+}
+
+static uint8_t clamp_light_speed(uint8_t speed) {
+    return speed > 4 ? 4 : speed;
+}
+
+static uint8_t clamp_light_brightness(uint8_t brightness) {
+    return brightness > 5 ? 5 : brightness;
+}
+
 const uint8_t logo_led_index_tab[LOGO_LINE] = {
     5, 6, 7, 8, 9, 10, 11,
 };
@@ -106,10 +120,10 @@ static void logo_wave_mode_show(void) {
     uint8_t play_index;
 
     //------------------------------
-    if (logo_play_cnt <= side_speed_table[keyboard_config.lights.ambient_mode][keyboard_config.lights.ambient_speed])
+    if (logo_play_cnt <= side_speed_table[clamp_light_mode(keyboard_config.lights.ambient_mode)][clamp_light_speed(keyboard_config.lights.ambient_speed)])
         return;
     else
-        logo_play_cnt -= side_speed_table[keyboard_config.lights.ambient_mode][keyboard_config.lights.ambient_speed];
+        logo_play_cnt -= side_speed_table[clamp_light_mode(keyboard_config.lights.ambient_mode)][clamp_light_speed(keyboard_config.lights.ambient_speed)];
     if (logo_play_cnt > 20) logo_play_cnt = 0;
 
     //------------------------------
@@ -117,7 +131,7 @@ static void logo_wave_mode_show(void) {
 
     play_index = logo_play_point;
 
-    logo_count_rgb_light(side_light_table[keyboard_config.lights.ambient_brightness]);
+    logo_count_rgb_light(side_light_table[clamp_light_brightness(keyboard_config.lights.ambient_brightness)]);
 
     for (int i = 0; i < LOGO_LINE; i++) {
         rgb_t rgb = nuphy_picker_hsv_rgb(keyboard_config.lights.ambient_static_color.hue, keyboard_config.lights.ambient_static_color.sat, 255);
@@ -128,17 +142,17 @@ static void logo_wave_mode_show(void) {
         logo_light_point_playing(1, 12, WAVE_TAB_LEN, &play_index);
         logo_count_rgb_light(wave_data_tab[play_index]);
 
-        logo_count_rgb_light(side_light_table[keyboard_config.lights.ambient_brightness]);
+        logo_count_rgb_light(side_light_table[clamp_light_brightness(keyboard_config.lights.ambient_brightness)]);
 
         side_rgb_set_color(logo_led_index_tab[i], r_temp >> 1, g_temp >> 1, b_temp >> 1);
     }
 }
 
 static void logo_spectrum_mode_show(void) {
-    if (logo_play_cnt <= side_speed_table[keyboard_config.lights.ambient_mode][keyboard_config.lights.ambient_speed])
+    if (logo_play_cnt <= side_speed_table[clamp_light_mode(keyboard_config.lights.ambient_mode)][clamp_light_speed(keyboard_config.lights.ambient_speed)])
         return;
     else
-        logo_play_cnt -= side_speed_table[keyboard_config.lights.ambient_mode][keyboard_config.lights.ambient_speed];
+        logo_play_cnt -= side_speed_table[clamp_light_mode(keyboard_config.lights.ambient_mode)][clamp_light_speed(keyboard_config.lights.ambient_speed)];
     if (logo_play_cnt > 20) logo_play_cnt = 0;
 
     logo_light_point_playing(1, 1, FLOW_COLOR_TAB_LEN, &logo_play_point);
@@ -147,7 +161,7 @@ static void logo_spectrum_mode_show(void) {
     g_temp = flow_rainbow_color_tab[logo_play_point][1];
     b_temp = flow_rainbow_color_tab[logo_play_point][2];
 
-    logo_count_rgb_light(side_light_table[keyboard_config.lights.ambient_brightness]);
+    logo_count_rgb_light(side_light_table[clamp_light_brightness(keyboard_config.lights.ambient_brightness)]);
 
     for (int i = 0; i < LOGO_LINE; i++) {
         side_rgb_set_color(logo_led_index_tab[i], r_temp >> 2, g_temp >> 2, b_temp >> 2);
@@ -157,10 +171,10 @@ static void logo_spectrum_mode_show(void) {
 static void logo_breathe_mode_show(void) {
     static uint8_t play_point = 0;
 
-    if (logo_play_cnt <= side_speed_table[keyboard_config.lights.ambient_mode][keyboard_config.lights.ambient_speed])
+    if (logo_play_cnt <= side_speed_table[clamp_light_mode(keyboard_config.lights.ambient_mode)][clamp_light_speed(keyboard_config.lights.ambient_speed)])
         return;
     else
-        logo_play_cnt -= side_speed_table[keyboard_config.lights.ambient_mode][keyboard_config.lights.ambient_speed];
+        logo_play_cnt -= side_speed_table[clamp_light_mode(keyboard_config.lights.ambient_mode)][clamp_light_speed(keyboard_config.lights.ambient_speed)];
     if (logo_play_cnt > 20) logo_play_cnt = 0;
 
     logo_light_point_playing(0, 1, BREATHE_TAB_LEN, &play_point);
@@ -172,7 +186,7 @@ static void logo_breathe_mode_show(void) {
     b_temp = rgb.b >> 2;
 
     logo_count_rgb_light(breathe_data_tab[play_point]);
-    logo_count_rgb_light(side_light_table[keyboard_config.lights.ambient_brightness]);
+    logo_count_rgb_light(side_light_table[clamp_light_brightness(keyboard_config.lights.ambient_brightness)]);
 
     for (int i = 0; i < LOGO_LINE; i++) {
         side_rgb_set_color(logo_led_index_tab[i], r_temp, g_temp, b_temp);
@@ -186,7 +200,7 @@ static void logo_static_mode_show(void) {
     g_temp = rgb.g >> 2;
     b_temp = rgb.b >> 2;
 
-    logo_count_rgb_light(side_light_table[keyboard_config.lights.ambient_brightness]);
+    logo_count_rgb_light(side_light_table[clamp_light_brightness(keyboard_config.lights.ambient_brightness)]);
 
     for (int i = 0; i < LOGO_LINE; i++) {
         side_rgb_set_color(logo_led_index_tab[i], r_temp, g_temp, b_temp);
@@ -194,10 +208,10 @@ static void logo_static_mode_show(void) {
 }
 
 static void logo_off_mode_show(void) {
-    if (logo_play_cnt <= side_speed_table[keyboard_config.lights.ambient_mode][keyboard_config.lights.ambient_speed])
+    if (logo_play_cnt <= side_speed_table[clamp_light_mode(keyboard_config.lights.ambient_mode)][clamp_light_speed(keyboard_config.lights.ambient_speed)])
         return;
     else
-        logo_play_cnt -= side_speed_table[keyboard_config.lights.ambient_mode][keyboard_config.lights.ambient_speed];
+        logo_play_cnt -= side_speed_table[clamp_light_mode(keyboard_config.lights.ambient_mode)][clamp_light_speed(keyboard_config.lights.ambient_speed)];
     if (logo_play_cnt > 20) logo_play_cnt = 0;
 
     r_temp = 0x00;

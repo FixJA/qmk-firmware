@@ -172,6 +172,9 @@ static uint8_t current_halo_led_count(void) {
 }
 
 static bool consume_animation_step(uint8_t mode, uint8_t speed) {
+    if (mode > SIDE_STATIC) { // table only has SIDE_STATIC+1 rows; mode may be any stored byte
+        mode = SIDE_STATIC;
+    }
     speed = clamp_speed(speed);
 
     if (side_play_cnt <= side_speed_table[mode][speed]) {
@@ -567,7 +570,7 @@ static void side_wave_mode_show(void) {
         light_point_playing(1, 5, WAVE_TAB_LEN, &play_index);
         count_rgb_light(wave_data_tab[play_index]);
 
-        count_rgb_light(side_light_table[keyboard_config.lights.side_brightness]);
+        count_rgb_light(side_light_table[clamp_brightness(keyboard_config.lights.side_brightness)]);
 
         play_index_1 = play_index;
 
@@ -580,7 +583,7 @@ static void side_wave_mode_show(void) {
                     b_temp    = rgb.b;
                     light_point_playing(1, 5, WAVE_TAB_LEN, &play_index_1);
                     count_rgb_light(wave_data_tab[play_index_1]);
-                    count_rgb_light(side_light_table[keyboard_config.lights.side_brightness]);
+                    count_rgb_light(side_light_table[clamp_brightness(keyboard_config.lights.side_brightness)]);
                     set_power_led_color(i, r_temp, g_temp, b_temp);
                 }
                 return;
@@ -595,30 +598,30 @@ static void side_wave_mode_show(void) {
 
 static void side_new_mode_show(void) {
     uint8_t play_index;
+    // dual_side_color_lib has 3 rows; side_color may hold a wide flow-palette value
+    uint8_t color = clamp_color(keyboard_config.lights.side_color, 3);
 
-    if (side_play_cnt <= side_speed_table[keyboard_config.lights.side_mode][keyboard_config.lights.side_speed])
+    if (!consume_animation_step(keyboard_config.lights.side_mode, keyboard_config.lights.side_speed)) {
         return;
-    else
-        side_play_cnt -= side_speed_table[keyboard_config.lights.side_mode][keyboard_config.lights.side_speed];
-    if (side_play_cnt > 20) side_play_cnt = 0;
+    }
 
     light_point_playing(0, 1, (side_line - 5), &side_play_point);
     play_index = side_play_point;
     if (side_line == 0) set_all_side_off();
     for (int i = 0; i <= (side_line - 5); i++) {
         if (play_index < (side_line - 5) / 2) {
-            r_temp = dual_side_color_lib[keyboard_config.lights.side_color][0];
-            g_temp = dual_side_color_lib[keyboard_config.lights.side_color][1];
-            b_temp = dual_side_color_lib[keyboard_config.lights.side_color][2];
+            r_temp = dual_side_color_lib[color][0];
+            g_temp = dual_side_color_lib[color][1];
+            b_temp = dual_side_color_lib[color][2];
         } else {
-            r_temp = dual_side_color_lib[keyboard_config.lights.side_color][3];
-            g_temp = dual_side_color_lib[keyboard_config.lights.side_color][4];
-            b_temp = dual_side_color_lib[keyboard_config.lights.side_color][5];
+            r_temp = dual_side_color_lib[color][3];
+            g_temp = dual_side_color_lib[color][4];
+            b_temp = dual_side_color_lib[color][5];
         }
 
         light_point_playing(1, 1, (side_line - 5), &play_index);
 
-        count_rgb_light(side_light_table[keyboard_config.lights.side_brightness]);
+        count_rgb_light(side_light_table[clamp_brightness(keyboard_config.lights.side_brightness)]);
 
         if (i == AMBIENT_LED_COUNT) {
             if (f_side_flag == 0x1f) {
@@ -646,7 +649,7 @@ static void side_spectrum_mode_show(void) {
     g_temp = flow_rainbow_color_tab[side_play_point][1];
     b_temp = flow_rainbow_color_tab[side_play_point][2];
 
-    count_rgb_light(side_light_table[keyboard_config.lights.side_brightness]);
+    count_rgb_light(side_light_table[clamp_brightness(keyboard_config.lights.side_brightness)]);
 
     for (int i = 0; i < side_line; i++) {
         set_masked_halo_led_color(i, r_temp, g_temp, b_temp);
@@ -669,7 +672,7 @@ static void side_breathe_mode_show(void) {
     g_temp    = rgb.g;
     b_temp    = rgb.b;
     count_rgb_light(breathe_data_tab[play_point]);
-    count_rgb_light(side_light_table[keyboard_config.lights.side_brightness]);
+    count_rgb_light(side_light_table[clamp_brightness(keyboard_config.lights.side_brightness)]);
 
     for (int i = 0; i < side_line; i++) {
         set_masked_halo_led_color(i, r_temp, g_temp, b_temp);
@@ -694,7 +697,7 @@ static void side_static_mode_show(void) {
             ;
         }
 
-        count_rgb_light(side_light_table[keyboard_config.lights.side_brightness]);
+        count_rgb_light(side_light_table[clamp_brightness(keyboard_config.lights.side_brightness)]);
 
         set_masked_halo_led_color(i, r_temp, g_temp, b_temp);
     }

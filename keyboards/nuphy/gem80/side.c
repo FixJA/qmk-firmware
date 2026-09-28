@@ -30,6 +30,20 @@ const uint8_t side_led_index_tab[SIDE_LINE] = {
 
 // clang-format on
 
+// side_speed_table is [5][5] and side_light_table is [6]; stored values can
+// hold any byte from a stale EEPROM or an unclamped host write
+static uint8_t clamp_light_mode(uint8_t mode) {
+    return mode > SIDE_OFF ? SIDE_OFF : mode;
+}
+
+static uint8_t clamp_light_speed(uint8_t speed) {
+    return speed > 4 ? 4 : speed;
+}
+
+static uint8_t clamp_light_brightness(uint8_t brightness) {
+    return brightness > 5 ? 5 : brightness;
+}
+
 bool f_charging = 1;
 
 uint8_t side_play_point = 0;
@@ -208,10 +222,10 @@ static void side_wave_mode_show(void) {
     uint8_t play_index;
 
     //------------------------------
-    if (side_play_cnt <= side_speed_table[keyboard_config.lights.side_mode][keyboard_config.lights.side_speed])
+    if (side_play_cnt <= side_speed_table[clamp_light_mode(keyboard_config.lights.side_mode)][clamp_light_speed(keyboard_config.lights.side_speed)])
         return;
     else
-        side_play_cnt -= side_speed_table[keyboard_config.lights.side_mode][keyboard_config.lights.side_speed];
+        side_play_cnt -= side_speed_table[clamp_light_mode(keyboard_config.lights.side_mode)][clamp_light_speed(keyboard_config.lights.side_speed)];
     if (side_play_cnt > 20) side_play_cnt = 0;
 
     //------------------------------
@@ -219,7 +233,7 @@ static void side_wave_mode_show(void) {
 
     play_index = side_play_point;
 
-    count_rgb_light(side_light_table[keyboard_config.lights.side_brightness]);
+    count_rgb_light(side_light_table[clamp_light_brightness(keyboard_config.lights.side_brightness)]);
 
     for (int i = 0; i < SIDE_LINE; i++) {
         rgb_t rgb = nuphy_picker_hsv_rgb(keyboard_config.lights.side_static_color.hue, keyboard_config.lights.side_static_color.sat, 255);
@@ -229,7 +243,7 @@ static void side_wave_mode_show(void) {
 
         light_point_playing(1, 12, WAVE_TAB_LEN, &play_index);
         count_rgb_light(wave_data_tab[play_index]);
-        count_rgb_light(side_light_table[keyboard_config.lights.side_brightness]);
+        count_rgb_light(side_light_table[clamp_light_brightness(keyboard_config.lights.side_brightness)]);
 
         side_rgb_set_color(side_led_index_tab[i], r_temp >> 2, g_temp >> 2, b_temp >> 2);
     }
@@ -240,10 +254,10 @@ static void side_wave_mode_show(void) {
  * @brief  side_spectrum_mode_show.
  */
 static void side_spectrum_mode_show(void) {
-    if (side_play_cnt <= side_speed_table[keyboard_config.lights.side_mode][keyboard_config.lights.side_speed])
+    if (side_play_cnt <= side_speed_table[clamp_light_mode(keyboard_config.lights.side_mode)][clamp_light_speed(keyboard_config.lights.side_speed)])
         return;
     else
-        side_play_cnt -= side_speed_table[keyboard_config.lights.side_mode][keyboard_config.lights.side_speed];
+        side_play_cnt -= side_speed_table[clamp_light_mode(keyboard_config.lights.side_mode)][clamp_light_speed(keyboard_config.lights.side_speed)];
     if (side_play_cnt > 20) side_play_cnt = 0;
 
     light_point_playing(1, 1, FLOW_COLOR_TAB_LEN, &side_play_point);
@@ -253,7 +267,7 @@ static void side_spectrum_mode_show(void) {
 
     b_temp = flow_rainbow_color_tab[side_play_point][2];
 
-    count_rgb_light(side_light_table[keyboard_config.lights.side_brightness]);
+    count_rgb_light(side_light_table[clamp_light_brightness(keyboard_config.lights.side_brightness)]);
 
     for (int i = 0; i < SIDE_LINE; i++) {
         side_rgb_set_color(side_led_index_tab[i], r_temp >> 2, g_temp >> 2, b_temp >> 2);
@@ -266,10 +280,10 @@ static void side_spectrum_mode_show(void) {
 static void side_breathe_mode_show(void) {
     static uint8_t play_point = 0;
 
-    if (side_play_cnt <= side_speed_table[keyboard_config.lights.side_mode][keyboard_config.lights.side_speed])
+    if (side_play_cnt <= side_speed_table[clamp_light_mode(keyboard_config.lights.side_mode)][clamp_light_speed(keyboard_config.lights.side_speed)])
         return;
     else
-        side_play_cnt -= side_speed_table[keyboard_config.lights.side_mode][keyboard_config.lights.side_speed];
+        side_play_cnt -= side_speed_table[clamp_light_mode(keyboard_config.lights.side_mode)][clamp_light_speed(keyboard_config.lights.side_speed)];
     if (side_play_cnt > 20) side_play_cnt = 0;
 
     light_point_playing(0, 1, BREATHE_TAB_LEN, &play_point);
@@ -281,7 +295,7 @@ static void side_breathe_mode_show(void) {
     b_temp = rgb.b >> 2;
 
     count_rgb_light(breathe_data_tab[play_point]);
-    count_rgb_light(side_light_table[keyboard_config.lights.side_brightness]);
+    count_rgb_light(side_light_table[clamp_light_brightness(keyboard_config.lights.side_brightness)]);
 
     set_side_rgb(r_temp, g_temp, b_temp);
 }
@@ -297,7 +311,7 @@ static void side_static_mode_show(void) {
     g_temp = rgb.g >> 2;
     b_temp = rgb.b >> 2;
 
-    count_rgb_light(side_light_table[keyboard_config.lights.side_brightness]);
+    count_rgb_light(side_light_table[clamp_light_brightness(keyboard_config.lights.side_brightness)]);
 
     for (int i = 0; i < SIDE_LINE; i++) {
         side_rgb_set_color(side_led_index_tab[i], r_temp, g_temp, b_temp);
@@ -310,10 +324,10 @@ static void side_static_mode_show(void) {
 static void side_off_mode_show(void)
 
 {
-    if (side_play_cnt <= side_speed_table[keyboard_config.lights.side_mode][keyboard_config.lights.side_speed])
+    if (side_play_cnt <= side_speed_table[clamp_light_mode(keyboard_config.lights.side_mode)][clamp_light_speed(keyboard_config.lights.side_speed)])
         return;
     else
-        side_play_cnt -= side_speed_table[keyboard_config.lights.side_mode][keyboard_config.lights.side_speed];
+        side_play_cnt -= side_speed_table[clamp_light_mode(keyboard_config.lights.side_mode)][clamp_light_speed(keyboard_config.lights.side_speed)];
     if (side_play_cnt > 20) side_play_cnt = 0;
 
     r_temp = 0x00;
