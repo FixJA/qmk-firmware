@@ -75,6 +75,7 @@ static bool     f_charging        = true;
 static uint8_t  side_play_point   = 0;
 static uint32_t battery_show_time = 0;
 static bool     battery_show_flag = true;
+static bool     f_bat_displaying  = false;
 
 static uint16_t side_play_cnt   = 0;
 static uint32_t side_play_timer = 0;
@@ -103,6 +104,8 @@ static uint8_t left_overlay_b      = 0;
 
 void kb_config_reset(void);
 
+// over-max garbage maps to the middle step on purpose (halo65v2/halo75v2 style;
+// air75v2/gem80 clamp to the boundary instead)
 static uint8_t clamp_speed(uint8_t speed) {
     if (speed > LIGHT_SPEED_MAX) {
         return LIGHT_SPEED_MAX / 2;
@@ -831,20 +834,27 @@ void    bat_percent_led(uint8_t bat_percent) {
 void bat_led_show(void) {
     static bool     f_bat_gap_wait = false;
     static uint32_t bat_gap_time   = 0;
+    static bool     f_started      = false;
 
-    if (dev_info.link_mode != LINK_USB) {
-        if (rf_link_show_time < RF_LINK_SHOW_TIME) return;
+    // wireless gates only gate the start; once shown, the display plays out its
+    // window instead of being cut off by link-state resets
+    if (!f_started) {
+        if (dev_info.link_mode != LINK_USB) {
+            if (rf_link_show_time < RF_LINK_SHOW_TIME) return;
 
-        if (dev_info.rf_state != RF_CONNECT) return;
+            if (dev_info.rf_state != RF_CONNECT) return;
+        }
+
+        // quiet beat so the battery bar doesn't swap in on the same frame the
+        // link indicator window closes
+        if (!f_bat_gap_wait) {
+            f_bat_gap_wait = true;
+            bat_gap_time   = timer_read32();
+        }
+        if (timer_elapsed32(bat_gap_time) < BAT_HANDOFF_GAP_MS) return;
+
+        f_started = true;
     }
-
-    // quiet beat so the battery bar doesn't swap in on the same frame the
-    // link indicator window closes
-    if (!f_bat_gap_wait) {
-        f_bat_gap_wait = true;
-        bat_gap_time   = timer_read32();
-    }
-    if (timer_elapsed32(bat_gap_time) < BAT_HANDOFF_GAP_MS) return;
 
     if (battery_state_init) {
         battery_state_init   = false;
@@ -901,14 +911,16 @@ void bat_led_show(void) {
         }
     }
 
-    if (f_bat_hold || battery_show_flag) {
+    f_bat_displaying = f_bat_hold || battery_show_flag;
+
+    if (f_bat_displaying) {
         bat_percent_led(battery_percent);
     }
 }
 
 // the link/wireless indicator yields while the battery display owns the side LEDs
 bool nuphy_bat_display_active(void) {
-    return f_bat_hold || battery_show_flag;
+    return f_bat_displaying;
 }
 
 /**
@@ -975,10 +987,12 @@ static void side_power_mode_show(void) {
         power_play_index++;
     }
 
-    // advance the rainbow base once per frame and step it per LED, matching
-    // the runtime spectrum effect; nothing else advances side_play_point
-    // while the boot animation owns side_led_show
-    light_point_playing(0, 1, FLOW_COLOR_TAB_LEN, &side_play_point);
+    // boot-only per-LED rainbow gradient (the runtime spectrum effect paints a
+    // uniform color per frame); nothing else advances side_play_point while the
+    // boot animation owns side_led_show
+    if (keyboard_config.lights.side_mode == SIDE_MIX) {
+        light_point_playing(0, 1, FLOW_COLOR_TAB_LEN, &side_play_point);
+    }
     uint8_t rainbow_index = side_play_point;
 
     uint8_t i;
@@ -1063,7 +1077,6 @@ void side_led_show(void) {
 
     if (f_power_show) {
         side_power_mode_show();
-        apply_indicator_overlay();
         return;
     }
 

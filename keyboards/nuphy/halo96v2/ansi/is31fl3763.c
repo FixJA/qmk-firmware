@@ -206,8 +206,9 @@ void is31fl3763_set_led_control_register(uint8_t index, bool red, bool green, bo
     uint8_t bit_b              = led.b % 8;
 
     // only control registers 0-23 (PWM regs 0-191) are ever flushed to the
-    // chip; higher channels (side LEDs on this board, up to R_12=0x147) run
-    // on the power-up default and indexing the 24-byte rows with them would
+    // chip; higher channels (any g_is31_leds entry at >= 0xC0 — the P-R side
+    // columns up to R_12=0x147, and some matrix K/L-R positions too) run on
+    // the power-up default and indexing the 24-byte rows with them would
     // corrupt adjacent .bss
     if (control_register_r < 24) {
         if (red) {
