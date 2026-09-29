@@ -48,6 +48,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define LIGHT_SPEED_MAX 4
 
 #define LOW_BAT_BLINK_PRIOD 500
+#define BAT_HANDOFF_GAP_MS 150 // quiet beat between the link window closing and the battery bar starting
 
 static const uint8_t side_speed_table[5][5] = {
     [SIDE_WAVE] = {10, 20, 25, 30, 45}, [SIDE_MIX] = {25, 30, 40, 50, 60}, [SIDE_NEW] = {30, 50, 60, 70, 100}, [SIDE_BREATH] = {25, 30, 40, 50, 60}, [SIDE_STATIC] = {10, 20, 25, 30, 45},
@@ -924,6 +925,8 @@ void bat_led_show(void) {
     static uint8_t  bat_percent      = 0;
     static bool     f_init           = true;
     static bool     f_started        = false;
+    static bool     f_bat_gap_wait   = false;
+    static uint32_t bat_gap_time     = 0;
 
     // wireless gates only gate the start; once shown, the display plays out its
     // window instead of being cut off by link-state resets
@@ -936,6 +939,16 @@ void bat_led_show(void) {
             if (dev_info.rf_state != RF_CONNECT) {
                 return;
             }
+        }
+
+        // quiet beat so the battery bar doesn't swap in on the same frame the
+        // link indicator window closes
+        if (!f_bat_gap_wait) {
+            f_bat_gap_wait = true;
+            bat_gap_time   = timer_read32();
+        }
+        if (timer_elapsed32(bat_gap_time) < BAT_HANDOFF_GAP_MS) {
+            return;
         }
         f_started = true;
     }

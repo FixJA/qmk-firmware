@@ -747,6 +747,7 @@ void bat_charging_breathe(void) {
 
 uint8_t low_bat_blink_cnt = 6;
 #define LOW_BAT_BLINK_PRIOD 500
+#define BAT_HANDOFF_GAP_MS 150 // quiet beat between the link window closing and the battery bar starting
 void low_bat_show(void) {
     static uint32_t interval_timer = 0;
 
@@ -828,11 +829,22 @@ void    bat_percent_led(uint8_t bat_percent) {
  * @brief  battery state indicate
  */
 void bat_led_show(void) {
+    static bool     f_bat_gap_wait = false;
+    static uint32_t bat_gap_time   = 0;
+
     if (dev_info.link_mode != LINK_USB) {
         if (rf_link_show_time < RF_LINK_SHOW_TIME) return;
 
         if (dev_info.rf_state != RF_CONNECT) return;
     }
+
+    // quiet beat so the battery bar doesn't swap in on the same frame the
+    // link indicator window closes
+    if (!f_bat_gap_wait) {
+        f_bat_gap_wait = true;
+        bat_gap_time   = timer_read32();
+    }
+    if (timer_elapsed32(bat_gap_time) < BAT_HANDOFF_GAP_MS) return;
 
     if (battery_state_init) {
         battery_state_init   = false;
