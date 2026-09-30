@@ -117,6 +117,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define NUPHY_BLE_NAME "NuPhy Halo75 V2"
 #define NUPHY_24G_NAME "NuPhy Halo75 V2 Dongle"
 
+// halo ambient has 7 layouts (AMBIENT_MODE_7 = 6); widen the VIA clamp so the
+// last two dropdown entries are storable. Side mode stays capped at 4.
+#define NUPHY_AMBIENT_LIGHT_MODE_MAX 6
+
 #define DEFAULT_SLEEP_TOGGLE true
 #define DEFAULT_USB_SLEEP_TOGGLE false
 #define DEFAULT_DEEP_SLEEP_TOGGLE true

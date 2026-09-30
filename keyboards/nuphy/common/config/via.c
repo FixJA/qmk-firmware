@@ -55,7 +55,7 @@ __attribute__((weak)) void via_config_set_value(uint8_t *data) {
             break;
 
         case id_ambient_light_mode:
-            keyboard_config.lights.ambient_mode = MIN(*value_data, NUPHY_LIGHT_MODE_MAX);
+            keyboard_config.lights.ambient_mode = MIN(*value_data, NUPHY_AMBIENT_LIGHT_MODE_MAX);
             break;
         case id_ambient_light_speed:
             keyboard_config.lights.ambient_speed = MIN(*value_data, NUPHY_LIGHT_SPEED_MAX);

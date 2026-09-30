@@ -291,9 +291,13 @@ enum NonMatrixEffects {
 } non_matrix_effects;
 
 // VIA hosts can send any byte; stored side/ambient values feed fixed-size
-// tables (side_speed_table[5][5], side_light_table[6]) and must stay bounded
+// tables (side_speed_table[5][5], side_light_table[6]) and must stay bounded.
+// Ambient carries its own cap: halo boards ship 7 layouts (0-6), the rest 5.
 #ifndef NUPHY_LIGHT_MODE_MAX
 #    define NUPHY_LIGHT_MODE_MAX EFFECT_OFF
+#endif
+#ifndef NUPHY_AMBIENT_LIGHT_MODE_MAX
+#    define NUPHY_AMBIENT_LIGHT_MODE_MAX NUPHY_LIGHT_MODE_MAX
 #endif
 #ifndef NUPHY_LIGHT_SPEED_MAX
 #    define NUPHY_LIGHT_SPEED_MAX 4
