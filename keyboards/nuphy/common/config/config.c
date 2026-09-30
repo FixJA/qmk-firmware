@@ -15,8 +15,6 @@ extern bool            f_deep_sleep_show;
 extern bool            f_usb_sleep_show;
 extern DEV_INFO_STRUCT dev_info;
 RGB                    bat_pct_rgb       = {.r = 0x80, .g = 0x80, .b = 0x00};
-uint16_t               rgb_led_last_act  = 0;
-uint16_t               side_led_last_act = 0;
 
 typedef struct {
     uint8_t side_mode;
@@ -204,40 +202,9 @@ void update_bat_pct_rgb(void) {
  */
 void user_set_rgb_color(int index, uint8_t red, uint8_t green, uint8_t blue) {
     if (red || green || blue) {
-        rgb_led_last_act = 0;
         pwr_rgb_led_on(); // turn on LEDs
     }
     rgb_matrix_set_color(index, red, green, blue);
-}
-
-/**
- * @brief Handle LED power
- * @note Turn off LEDs if not used to save some power. This is ported
- *       from older Nuphy leaks.
- */
-void led_power_handle(void) {
-    static uint32_t interval = 0;
-
-    if (timer_elapsed32(interval) < 500) // only check once in a while, less flickering for unhandled cases
-        return;
-
-    interval = timer_read32();
-
-    if (rgb_led_last_act > 100) { // 10ms intervals
-        if (rgb_matrix_is_enabled() && rgb_matrix_get_val() != 0) {
-            pwr_rgb_led_on();
-        } else { // brightness is 0 or RGB off.
-            pwr_rgb_led_off();
-        }
-    }
-
-    if (side_led_last_act > 100) { // 10ms intervals
-        if (keyboard_config.lights.side_brightness == 0) {
-            pwr_side_led_off();
-        } else {
-            pwr_side_led_on();
-        }
-    }
 }
 
 uint8_t get_led_index(uint8_t row, uint8_t col) {
